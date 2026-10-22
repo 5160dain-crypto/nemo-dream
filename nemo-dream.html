@@ -1,0 +1,1857 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>네모의 꿈 · 의사결정트리로 사각형 분류하기</title>
+<meta name="description" content="초등 4학년 수학 사각형 단원과 머신러닝 의사결정트리(지도학습)를 함께 배우는 게임형 교육 자료">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--bg:#f3f6fc;--ink:#1c2541;--muted:#5a6788;--card:#fff;--line:#e3e8f2;--accent:#4361ee;--accent-d:#2f45c9;--accent-soft:#eef1ff;--sun:#ffb703;--ok:#15803d;--ok-soft:#dcfce7;--bad:#e11d48;--bad-soft:#ffe4e6;--r:18px;--shadow:0 1px 2px rgba(28,37,65,.06),0 8px 24px rgba(28,37,65,.07)}
+*{box-sizing:border-box}
+body{margin:0;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);background-image:linear-gradient(#e5eaf5 1px,transparent 1px),linear-gradient(90deg,#e5eaf5 1px,transparent 1px);background-size:32px 32px;line-height:1.65;word-break:keep-all;font-size:16px}
+h1,h2,h3,h4,.brand,.stage-no,.jua{font-family:Jua,Pretendard,sans-serif;font-weight:400;letter-spacing:-.01em;line-height:1.3}
+h2{font-size:1.9rem;margin:0}h3{font-size:1.3rem;margin:0 0 .6rem}h4{font-size:1.08rem;margin:1.1rem 0 .5rem}
+p{margin:.4rem 0}
+small{color:var(--muted);font-weight:500}
+button{font:inherit}
+a{color:var(--accent)}
+/* ---------- topbar ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:8px;font-size:1.45rem;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand-mark{width:22px;height:22px;border-radius:6px;background:var(--accent);box-shadow:5px 5px 0 var(--sun);transform:rotate(-8deg)}
+.nav{display:flex;gap:4px;overflow-x:auto;flex:1;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav button{border:0;background:transparent;padding:8px 13px;border-radius:999px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+.nav button:hover{background:var(--accent-soft);color:var(--ink)}
+.nav button.on{background:var(--ink);color:#fff}
+@media(max-width:640px){.topbar-in{flex-wrap:wrap;row-gap:6px}.nav{order:3;flex-basis:100%}.brand{flex:1}}
+.slides{scroll-margin-top:80px}
+.star-count{white-space:nowrap;font-weight:800;background:#fff7e0;border:1.5px solid #ffe08a;padding:5px 12px;border-radius:999px}
+/* ---------- layout ---------- */
+.page{display:none}.page.active{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px 70px}
+.page-head{margin:4px 0 18px}.page-head p{color:var(--muted);margin:.3rem 0 0}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:20px;border:1px solid var(--line)}
+.grid2{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:18px;align-items:start}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.col{display:flex;flex-direction:column;gap:18px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.card-head h3{margin:0}
+.card-head>div{display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:880px){.grid2,.two-col{grid-template-columns:1fr}}
+/* ---------- buttons ---------- */
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;transition:transform .1s,background .15s;box-shadow:0 2px 0 var(--accent-d)}
+.btn:hover{background:var(--accent-d)}.btn:active{transform:translateY(2px);box-shadow:none}
+.btn.ghost{background:#eef1f8;color:var(--ink);box-shadow:0 2px 0 #d5dbe9}.btn.ghost:hover{background:#e2e7f3}
+.btn.alt{background:var(--sun);color:var(--ink);box-shadow:0 2px 0 #d99a00}.btn.alt:hover{background:#ffc634}
+.btn.big{padding:14px 22px;font-size:1.05rem;border-radius:14px}
+.btn.sm{padding:7px 12px;font-size:.88rem;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.yes{background:var(--ok);box-shadow:0 3px 0 #0f5a2b;font-size:1.15rem;padding:12px 30px}
+.btn.no{background:var(--bad);box-shadow:0 3px 0 #9f1239;font-size:1.15rem;padding:12px 30px}
+/* ---------- home ---------- */
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;align-items:center;background:#fff;border-radius:28px;padding:34px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;position:relative}
+.kicker{display:inline-block;background:var(--accent-soft);color:var(--accent-d);font-weight:800;font-size:.85rem;padding:4px 12px;border-radius:999px}
+.hero h1{font-size:3.6rem;margin:.4rem 0 .2rem;color:var(--ink)}
+.hero h1 span{color:var(--accent)}
+.lead{font-size:1.08rem;color:#34405f}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 10px}
+.rank{font-weight:800;color:var(--muted);margin-top:6px}
+.hero-art svg{width:100%;height:auto;display:block}
+@media(max-width:880px){.hero{grid-template-columns:1fr;padding:24px}.hero h1{font-size:2.8rem}.hero-art{max-width:340px;margin:0 auto}}
+.sec-title{margin:32px 0 14px;font-size:1.6rem}
+.stage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.stage-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.stage-grid{grid-template-columns:1fr}}
+.stage{text-align:left;border:1px solid var(--line);background:#fff;border-radius:var(--r);padding:18px;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s,border-color .15s;display:flex;flex-direction:column;gap:6px;color:var(--ink)}
+.stage:hover{transform:translateY(-3px);border-color:var(--accent)}
+.stage h3{margin:0;font-size:1.25rem}.stage p{color:var(--muted);font-size:.93rem;margin:0;flex:1}
+.stage-no{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;font-size:1.3rem}
+.stage:nth-child(1) .stage-no{background:#0d9488}.stage:nth-child(2) .stage-no{background:#8b5cf6}.stage:nth-child(3) .stage-no{background:#f0801d}.stage:nth-child(4) .stage-no{background:#4361ee}
+.stage-star{font-weight:800;font-size:.9rem}
+.card ul,.card ol{padding-left:1.2rem;margin:.3rem 0}.card li{margin:.25rem 0}
+details.card>summary{cursor:pointer;font-family:Jua,sans-serif;font-size:1.2rem;list-style:none}
+details.card>summary::before{content:'▸ ';color:var(--accent)}
+details.card[open]>summary::before{content:'▾ '}
+details.card{margin-top:18px}
+.info-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.94rem}
+.info-table th,.info-table td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+.info-table th{background:#f5f7fc;white-space:nowrap;width:150px}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px 16px 40px}
+/* ---------- subnav ---------- */
+.subnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.subnav button{border:1.5px solid var(--line);background:#fff;padding:8px 15px;border-radius:999px;font-weight:800;cursor:pointer;color:var(--muted)}
+.subnav button.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.sub{display:none}.sub.on{display:block;animation:fade .3s}
+/* ---------- concept ---------- */
+.def{background:var(--accent-soft);border-left:5px solid var(--accent);padding:10px 14px;border-radius:0 12px 12px 0;margin:.55rem 0;font-size:1.02rem}
+.missions{list-style:none;padding:0!important;margin:0;display:flex;flex-direction:column;gap:7px}
+.mission{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:12px;border:1.5px solid var(--line);background:#fff;margin:0!important}
+.mission .chk{font-size:1.15rem;width:22px;text-align:center;color:#c3cad9}
+.mission.done{background:#fffbea;border-color:#ffe08a}.mission.done .chk{color:inherit}
+.missions.pickable .mission{cursor:pointer}.missions.pickable .mission:hover{border-color:#b9c4ef}
+.mission.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+details.hint{margin-top:12px;background:#fffbea;border-radius:12px;padding:8px 12px}
+details.hint summary{cursor:pointer;font-weight:800}
+.tip{color:var(--muted);font-size:.92rem}
+/* ---------- board ---------- */
+.board{width:100%;height:auto;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.board-bg{fill:#fff}
+.grid-line{stroke:#e3e8f3;stroke-width:.025}
+.grid-dot{fill:#aab5cc}
+.handle{cursor:grab}.handle:active{cursor:grabbing}
+.handle-dot{fill:#fff;stroke:var(--accent);stroke-width:.1}
+.handle:hover .handle-dot{fill:var(--accent-soft)}
+.vlabel{font-size:.46px;font-weight:800;fill:var(--ink);text-anchor:middle;dominant-baseline:central;font-family:Pretendard,sans-serif}
+.angle-txt{font-size:.32px;font-weight:700;fill:#475569;text-anchor:middle;dominant-baseline:central;font-family:Pretendard,sans-serif}
+.line-label{font-size:.5px;font-weight:800;text-anchor:middle;dominant-baseline:central;font-family:Jua,sans-serif}
+.dist-label{font-size:.36px;font-weight:800;fill:#c2410c;font-family:Pretendard,sans-serif}
+.status{padding:12px 14px;border-radius:12px;background:#f1f4f9;margin-top:12px;font-size:.98rem;min-height:1.5em}
+.status:empty{display:none}
+.status.good{background:var(--ok-soft);color:#14532d}
+.status.bad{background:var(--bad-soft);color:#881337}
+.toggles{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.toggles label,.switch{display:inline-flex;align-items:center;gap:5px;font-size:.88rem;font-weight:700;background:#f1f4f9;padding:5px 10px;border-radius:999px;cursor:pointer;color:#34405f}
+.toggles input,.switch input{accent-color:var(--accent)}
+.lab-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.measure{margin-top:12px}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m-grid>div{background:#f6f8fc;border-radius:12px;padding:9px 12px;display:flex;flex-direction:column}
+.m-grid span{font-size:.8rem;color:var(--muted);font-weight:700}
+.m-grid b{font-size:1.15rem}
+.m-grid small{font-size:.82rem}
+.names{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.names>span{font-size:.85rem;font-weight:800;color:var(--muted);margin-right:2px}
+.names em{font-style:normal;font-weight:800;font-size:.88rem;padding:3px 10px;border-radius:999px;border:1.5px solid var(--c);color:var(--c);background:#fff}
+.names em.best{background:var(--c);color:#fff}
+.names-tip{font-size:.9rem;color:#34405f}
+.warn{background:#fff1f2;color:#9f1239;padding:12px;border-radius:12px;font-weight:700}
+.shape-info{margin-top:14px;border-radius:14px;padding:14px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 7%,#fff)}
+.shape-info h4{margin:0 0 4px;color:var(--c)}
+.shape-info ul{margin:.3rem 0 0}
+/* summary */
+.prop-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.95rem;overflow:hidden;border-radius:14px;border:1px solid var(--line)}
+.prop-table th,.prop-table td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--line)}
+.prop-table thead th{background:#f5f7fc;font-weight:800;font-size:.85rem}
+.prop-table td:first-child{font-weight:800;color:var(--c);text-align:left;padding-left:14px}
+.prop-table tr:last-child td{border-bottom:0}
+.o{color:var(--ok);font-weight:900}.x{color:#c3cad9}
+.table-scroll{overflow-x:auto}
+.callout{margin-top:14px;background:#fffbea;border:1.5px solid #ffe08a;border-radius:14px;padding:12px 14px}
+.incl svg{width:100%;height:auto;max-width:560px;display:block;margin:0 auto}
+/* ---------- theory ---------- */
+.slides{position:relative}
+.slide-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#slideNo{font-weight:800;color:var(--muted)}
+.dots{display:flex;gap:6px}
+.dots button{width:11px;height:11px;border-radius:50%;border:0;background:#d5dbe9;cursor:pointer;padding:0}
+.dots button.on{background:var(--accent);width:26px;border-radius:999px}
+.slide{display:none;min-height:420px}.slide.on{display:block;animation:fade .3s}
+.slide h3{font-size:1.6rem}
+.slide-nav{display:flex;justify-content:space-between;margin-top:18px;gap:10px}
+.key{background:var(--sun);padding:1px 8px;border-radius:6px;font-weight:800}
+.flow{display:flex;align-items:stretch;gap:10px;margin:18px 0;flex-wrap:wrap}
+.flow-box{flex:1;min-width:160px;background:#f6f8fc;border-radius:16px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:3px;align-items:center}
+.flow-box b{font-family:Jua,sans-serif;font-size:1.15rem;font-weight:400}.flow-box span{color:var(--muted);font-size:.9rem}
+.flow-ico{font-size:2rem;min-height:60px;display:flex;align-items:center;justify-content:center;gap:4px}
+.flow-arrow{align-self:center;font-size:1.6rem;color:var(--accent);font-weight:900}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips span{background:var(--ink);color:#fff;font-weight:700;font-size:.85rem;padding:4px 12px;border-radius:999px}
+.chat{display:flex;flex-direction:column;gap:8px;max-width:440px}
+.bubble{padding:10px 14px;border-radius:16px;max-width:85%;font-weight:700}
+.bubble.q{background:var(--accent-soft);align-self:flex-start;border-bottom-left-radius:4px}
+.bubble.a{background:var(--ok-soft);align-self:flex-end;border-bottom-right-radius:4px;color:#14532d}
+.bubble.ans{background:var(--ink);color:#fff;align-self:center;font-size:1.1rem}
+.slide-split{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;align-items:center}
+@media(max-width:760px){.slide-split{grid-template-columns:1fr}}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px}
+.legend div{background:#f6f8fc;border-radius:12px;padding:9px 12px;font-size:.93rem}
+.legend b{display:block;font-family:Jua,sans-serif;font-weight:400;font-size:1.05rem}
+.pool{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pool .chipshape{display:flex;flex-direction:column;align-items:center;font-size:.7rem;font-weight:800;width:62px}
+.mini{display:block}
+.q-btns{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.q-btns button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 11px;font-weight:700;cursor:pointer}
+.q-btns button.on{border-color:var(--accent);background:var(--accent-soft)}
+.split-result{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.split-box{border-radius:14px;padding:10px;border:2px dashed var(--line);min-height:110px}
+.split-box h5{margin:0 0 4px;font-size:.95rem}
+.split-box.yes{border-color:#86efac;background:#f6fef8}.split-box.no{border-color:#fda4af;background:#fff7f8}
+.split-box .pool{margin:4px 0}
+.split-box .pool .chipshape{width:44px}
+.meter{height:10px;border-radius:999px;background:#e9edf5;overflow:hidden;margin-top:4px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,#fbbf24,#22c55e);border-radius:999px;transition:width .5s}
+.rank-list{list-style:none;padding:0!important;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.rank-list li{display:grid;grid-template-columns:28px 1fr 120px 48px;gap:8px;align-items:center;background:#f6f8fc;border-radius:10px;padding:7px 10px;font-weight:700;font-size:.92rem}
+.rank-list li.top{background:#fffbea;border:1.5px solid #ffe08a}
+.steps{counter-reset:s;list-style:none;padding:0!important}
+.steps li{counter-increment:s;padding-left:38px;position:relative;margin:.55rem 0!important}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:27px;height:27px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.9rem}
+.pred-row{display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:center;margin-top:10px}
+.pred-row ol{margin:0}
+.pred-row li.res{list-style:none;margin-left:-1.2rem;font-weight:800}
+.warn-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+@media(max-width:760px){.warn-cards{grid-template-columns:1fr}}
+.warn-cards div{background:#fff7f8;border:1.5px solid #fecdd3;border-radius:14px;padding:14px}
+.warn-cards b{font-family:Jua,sans-serif;font-weight:400;font-size:1.1rem;display:block}
+.goodbox{background:var(--ok-soft);border-radius:14px;padding:14px;color:#14532d}
+.quiz-q{background:#f6f8fc;border-radius:14px;padding:14px;margin:10px 0}
+.quiz-q p{font-weight:800;margin:0 0 8px}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:6px}
+.quiz-opts button{border:1.5px solid var(--line);background:#fff;padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+.quiz-opts button.right{background:var(--ok-soft);border-color:var(--ok)}
+.quiz-opts button.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.quiz-opts button:disabled{cursor:default}
+.quiz-ex{font-size:.9rem;color:#34405f;margin-top:6px!important}
+.deep-body .formula{font-family:Georgia,serif;font-size:1.25rem;background:#f6f8fc;padding:10px 14px;border-radius:10px;display:inline-block}
+/* ---------- tree ---------- */
+.tree-box{overflow-x:auto;padding:4px 0}
+.tree-svg{display:block;margin:0 auto;width:100%;height:auto}
+.empty{color:var(--muted);text-align:center;padding:40px 10px;background:#f6f8fc;border-radius:14px;font-weight:600}
+.q-rect{fill:#fff;stroke:#a5b1c7;stroke-width:1.5}
+.tree-node.hot .q-rect{stroke:var(--accent);stroke-width:3;fill:var(--accent-soft)}
+.tree-node.current .q-rect{stroke:var(--sun);stroke-width:4;fill:#fffbea}
+.leaf-rect{stroke:#fff;stroke-width:0}
+.tree-node.hot .leaf-rect{stroke:var(--ink);stroke-width:4}
+.q-txt{font-size:13px;font-weight:800;text-anchor:middle;dominant-baseline:central;fill:var(--ink);font-family:Pretendard,sans-serif}
+.n-txt{font-size:11px;fill:#64748b;text-anchor:middle;dominant-baseline:central;font-family:Pretendard,sans-serif}
+.leaf-txt{fill:#fff;font-weight:800;font-size:14px;text-anchor:middle;dominant-baseline:central;font-family:Pretendard,sans-serif}
+.tree-edge{fill:none;stroke:#cdd5e3;stroke-width:2.5}
+.tree-edge.hot{stroke:var(--accent);stroke-width:4.5}
+.edge-tag.yes{fill:#dcfce7}.edge-tag.no{fill:#ffe4e6}
+.edge-txt{font-size:11px;font-weight:800;text-anchor:middle;dominant-baseline:central;fill:#334155;font-family:Pretendard,sans-serif}
+/* ---------- detective ---------- */
+.hud{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.hud div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-weight:800;box-shadow:var(--shadow)}
+.hud .combo{background:#fff7e0;border-color:#ffe08a}
+.det-q{font-size:1.25rem;font-family:Jua,sans-serif;text-align:center;margin:12px 0 8px;min-height:2em}
+.det-btns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center}
+.intro-card{text-align:center;padding:36px 20px}
+.intro-card .robot{margin:0 auto}
+.intro-card ul{text-align:left;display:inline-block;margin:10px auto}
+.big-score{font-family:Jua,sans-serif;font-size:2.4rem}
+.stars-big{font-size:2.2rem;letter-spacing:4px}
+.qbadge{background:var(--ink);color:#fff;font-size:.8rem;padding:2px 8px;border-radius:6px;vertical-align:middle;margin-right:6px;font-family:Pretendard,sans-serif;font-weight:800}
+/* ---------- train ---------- */
+.train-grid{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:18px;align-items:start}
+@media(max-width:980px){.train-grid{grid-template-columns:1fr}}
+.ask{font-weight:700;margin:12px 0 6px}
+.lbl-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.lbl{border:0;background:var(--c);color:#fff;font-weight:800;padding:10px 4px;border-radius:12px;cursor:pointer;box-shadow:0 3px 0 color-mix(in srgb,var(--c) 70%,#000);font-size:.95rem}
+.lbl:active{transform:translateY(2px);box-shadow:none}
+.row{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
+.bot-box{display:flex;gap:12px;align-items:center;margin-top:14px;background:#f6f8fc;border-radius:16px;padding:12px}
+.bot-box p{margin:2px 0;font-size:.9rem;color:#34405f}
+.lvbar{height:9px;background:#e2e7f3;border-radius:999px;overflow:hidden;margin-top:6px}
+.lvbar span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#8b5cf6);transition:width .4s}
+.table-wrap{max-height:330px;overflow:auto;border-radius:12px;border:1px solid var(--line)}
+.table-wrap.tall{max-height:640px}
+.data-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.data-table th{position:sticky;top:0;background:#f5f7fc;font-size:.78rem;padding:7px 6px;z-index:1;white-space:nowrap}
+.data-table td{padding:5px 6px;border-top:1px solid var(--line);text-align:center}
+.data-table tr.off td{opacity:.4}
+.data-table .mini{width:46px;height:46px;margin:0 auto}
+.tall .data-table .mini{width:64px;height:64px}
+.tag{display:inline-block;background:var(--c);color:#fff;font-weight:800;border-radius:999px;padding:2px 9px;font-size:.82rem}
+.lbl-sel{border:2px solid var(--c);color:var(--c);font-weight:800;border-radius:9px;padding:4px 6px;background:#fff;font:inherit;font-weight:800;font-size:.85rem;cursor:pointer}
+.del{border:0;background:transparent;cursor:pointer;color:#94a3b8;font-size:1rem}
+.del:hover{color:var(--bad)}
+.test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:8px;margin-top:10px}
+.t-card{position:relative;border-radius:12px;padding:6px;border:2px solid;background:#fff;cursor:pointer;animation:pop .35s both;text-align:center}
+.t-card.ok{border-color:#86efac}.t-card.bad{border-color:#fda4af;background:#fff7f8}
+.t-card.sel{box-shadow:0 0 0 3px var(--accent)}
+.t-card .mini{width:62px;height:62px;margin:0 auto}
+.t-card i{position:absolute;top:4px;right:7px;font-style:normal;font-weight:900}
+.t-card.ok i{color:var(--ok)}.t-card.bad i{color:var(--bad)}
+.t-lab{font-size:.74rem;line-height:1.3}.t-lab span{display:block;color:var(--muted)}
+@keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+.pool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pcard{border:2px solid var(--line);border-radius:14px;padding:6px;background:#fff;cursor:pointer;text-align:center;font-weight:800;font-size:.82rem;transition:transform .12s}
+.pcard:hover{transform:translateY(-2px)}
+.pcard .mini{width:70px;height:70px;margin:0 auto}
+.pcard.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px #c7d2fe}
+.mission-intro{margin-bottom:18px;background:linear-gradient(120deg,#fff,#f3f0ff)}
+/* ---------- misc ---------- */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:999px;font-weight:700;opacity:0;transition:.3s;z-index:60;pointer-events:none;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#toast.star{background:#b45309}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.modal[hidden]{display:none}
+.modal-card{background:#fff;border-radius:22px;padding:22px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:90vh;overflow:auto}
+.modal-card .lbl-btns{margin:12px 0}
+.ask-res{display:flex;gap:12px;align-items:center;font-size:1.1rem}
+.path{background:#f6f8fc;border-radius:12px;padding:10px 10px 10px 30px!important;font-size:.92rem}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.confetti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(108vh) rotate(620deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#home" data-go="home"><span class="brand-mark"></span>네모의 꿈</a>
+    <nav class="nav" id="nav">
+      <button data-go="home">홈</button>
+      <button data-go="explore">① 사각형 탐험</button>
+      <button data-go="theory">② 의사결정트리 원리</button>
+      <button data-go="detective">③ 스무고개 탐정</button>
+      <button data-go="train">④ AI 조수 훈련소</button>
+    </nav>
+    <div class="star-count" title="모은 별">⭐ <b id="starNow">0</b>/<span id="starMax">0</span></div>
+  </div>
+</header>
+
+<main>
+<!-- ======================= HOME ======================= -->
+<section class="page" id="page-home"><div class="wrap">
+  <div class="hero">
+    <div>
+      <span class="kicker">초등 4학년 수학 · 4. 사각형 × 머신러닝</span>
+      <h1>네모의 <span>꿈</span></h1>
+      <p class="lead">사각형을 직접 만들고, 스무고개처럼 질문하며 분류하고,<br>AI 조수 <b>네모봇</b>에게 사각형을 가르쳐 보세요.<br>그러면서 AI의 <b>의사결정트리</b>와 <b>지도학습</b>을 배워요.</p>
+      <div class="hero-btns">
+        <button class="btn big" data-go="explore">모험 시작하기 →</button>
+        <button class="btn ghost big" data-go="theory">의사결정트리가 뭐예요?</button>
+      </div>
+      <div class="rank" id="rank"></div>
+    </div>
+    <div class="hero-art" id="heroArt"></div>
+  </div>
+
+  <h2 class="sec-title">모험 지도</h2>
+  <div class="stage-grid">
+    <button class="stage" data-go="explore"><span class="stage-no">1</span><h3>사각형 탐험</h3><p>지오보드의 꼭짓점을 움직이며 수직·수선·평행·평행선과 다섯 가지 사각형의 성질을 발견해요.</p><span class="stage-star" data-stars="explore"></span></button>
+    <button class="stage" data-go="theory"><span class="stage-no">2</span><h3>의사결정트리 원리</h3><p>AI가 스무고개처럼 질문하며 분류하는 원리와, 데이터로 질문을 고르는 방법을 알아봐요.</p><span class="stage-star" data-stars="theory"></span></button>
+    <button class="stage" data-go="detective"><span class="stage-no">3</span><h3>스무고개 탐정</h3><p>트리의 질문에 예/아니오로 답하며 사각형의 정체를 밝혀요. 콤보를 이어 가 보세요!</p><span class="stage-star" data-stars="detective"></span></button>
+    <button class="stage" data-go="train"><span class="stage-no">4</span><h3>AI 조수 훈련소</h3><p>사각형에 이름표를 붙여 네모봇을 학습시키고, 시험 보고, 잘못된 데이터를 고쳐요.</p><span class="stage-star" data-stars="train"></span></button>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>🎯 학습 목표</h3>
+      <ul>
+        <li>수직과 수선, 평행과 평행선의 뜻을 알고 지오보드에서 만들 수 있어요.</li>
+        <li>사다리꼴, 평행사변형, 마름모, 직사각형, 정사각형의 성질을 탐구하고 서로의 관계를 설명할 수 있어요.</li>
+        <li>정답(이름표)이 붙은 데이터로 AI가 배우는 <b>지도학습</b>의 뜻을 알 수 있어요.</li>
+        <li><b>의사결정트리</b>가 질문으로 데이터를 나누어 분류하는 원리를 이해하고, 데이터가 AI에 주는 영향을 설명할 수 있어요.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🧭 이렇게 진행해요</h3>
+      <ol>
+        <li><b>사각형 탐험</b> — 직접 만들며 개념 익히기</li>
+        <li><b>의사결정트리 원리</b> — 7장의 카드와 확인 퀴즈</li>
+        <li><b>스무고개 탐정</b> — 트리를 따라가며 분류하기</li>
+        <li><b>AI 조수 훈련소</b> — 데이터로 AI 학습시키기</li>
+      </ol>
+      <p class="tip">미션을 해결할 때마다 ⭐을 모아 칭호를 올려 보세요.</p>
+    </div>
+  </div>
+
+  <details class="card">
+    <summary>👩‍🏫 선생님을 위한 안내</summary>
+    <table class="info-table">
+      <tr><th>대상 · 교과</th><td>초등학교 4학년 · 수학 4. 사각형 (AI 융합)</td></tr>
+      <tr><th>성취기준</th><td>[04수-03-10] 여러 가지 모양의 사각형에 대한 분류 활동을 통하여 직사각형, 정사각형, 사다리꼴, 평행사변형, 마름모를 이해하고, 그 성질을 탐구할 수 있다.</td></tr>
+      <tr><th>수학 개념</th><td>수직, 수선, 평행, 평행선(평행선 사이의 거리), 사다리꼴, 평행사변형, 마름모, 직사각형, 정사각형의 성질과 포함 관계</td></tr>
+      <tr><th>머신러닝 개념</th><td>지도학습(분류), 의사결정트리(CART 방식, 지니 불순도), 학습 데이터의 양·균형·정확성</td></tr>
+      <tr><th>데이터 구성</th><td>속성 3개: 평행한 변의 쌍 수(0·1·2), 직각의 수(0~4), 네 변의 길이가 모두 같은가(1·0)<br>클래스 6개: 정사각형, 직사각형, 마름모, 평행사변형, 사다리꼴, 일반 사각형 (가장 정확한 이름 하나만 붙임)</td></tr>
+      <tr><th>게임 요소</th><td>별 모으기와 칭호, 단계별 미션, 스무고개 탐정의 점수·콤보·하트, 네모봇 레벨업, 정확도 시험, 데이터 6장 전략 미션, 오염 데이터 찾기</td></tr>
+      <tr><th>엔트리 연계</th><td>④ 훈련소의 <b>CSV(엔트리용)</b> 버튼으로 학습 데이터를 내려받아 엔트리 데이터 테이블에 불러온 뒤, ‘분류: 숫자(결정 트리)’ 모델로 학습시킬 수 있습니다.</td></tr>
+      <tr><th>저장 방식</th><td>별과 학습 데이터는 이 브라우저에만 저장됩니다(로그인·서버 없음). 공용 PC에서는 수업 후 아래 버튼으로 초기화하세요.</td></tr>
+    </table>
+    <p style="margin-top:12px"><button class="btn ghost sm" id="resetAll">진행 상황 · 학습 데이터 모두 초기화</button></p>
+  </details>
+</div></section>
+
+<!-- ======================= EXPLORE ======================= -->
+<section class="page" id="page-explore"><div class="wrap">
+  <div class="page-head"><h2>① 사각형 탐험</h2><p>지오보드의 점(●)을 손가락이나 마우스로 끌어서 움직여 보세요. 점은 모눈의 교차점에 착 붙어요.</p></div>
+  <div class="subnav" id="exploreNav">
+    <button data-sub="perp" class="on">수직과 수선</button>
+    <button data-sub="par">평행과 평행선</button>
+    <button data-sub="lab">사각형 실험실</button>
+    <button data-sub="sum">성질 정리</button>
+  </div>
+
+  <div class="sub on" id="sub-perp"><div class="grid2">
+    <div class="card">
+      <h3>수직과 수선</h3>
+      <div class="def">두 직선이 만나서 이루는 각이 <b>직각</b>일 때, 두 직선은 서로 <b>수직</b>이라고 해요.</div>
+      <div class="def">두 직선이 서로 수직으로 만나면, 한 직선을 다른 직선에 대한 <b>수선</b>이라고 해요.</div>
+      <h4>미션</h4>
+      <ul class="missions" id="perpMissions"></ul>
+      <details class="hint"><summary>💡 힌트가 필요해요</summary>
+        <p>직선 가가 <b>오른쪽으로 2칸, 위로 1칸</b> 가는 방향이라면, <b>위로 2칸, 왼쪽으로 1칸</b> 가는 직선이 수직이에요.<br>두 칸 수를 서로 바꾸고, 방향 하나를 반대로 해 보세요!</p>
+      </details>
+    </div>
+    <div class="card"><svg class="board" id="perpBoard" aria-label="수직 지오보드"></svg><div class="status" id="perpStatus"></div></div>
+  </div></div>
+
+  <div class="sub" id="sub-par"><div class="grid2">
+    <div class="card">
+      <h3>평행과 평행선</h3>
+      <div class="def">한 직선에 수직인 두 직선을 그으면, 두 직선은 서로 만나지 않아요. 이렇게 <b>서로 만나지 않는 두 직선</b>을 <b>평행</b>하다고 해요.</div>
+      <div class="def">평행한 두 직선을 <b>평행선</b>이라고 해요.</div>
+      <div class="def">평행선의 한 직선에서 다른 직선에 수선을 그었을 때, 그 수선의 길이를 <b>평행선 사이의 거리</b>라고 해요.</div>
+      <h4>미션</h4>
+      <ul class="missions" id="parMissions"></ul>
+      <details class="hint"><summary>💡 힌트가 필요해요</summary>
+        <p>두 직선이 기울어진 정도가 같으면 평행해요. 직선 가가 <b>오른쪽 3칸, 아래 1칸</b>이면 직선 나도 <b>오른쪽 3칸, 아래 1칸</b>(또는 6칸·2칸)으로 만들어 보세요.</p>
+      </details>
+    </div>
+    <div class="card"><svg class="board" id="parBoard" aria-label="평행 지오보드"></svg><div class="status" id="parStatus"></div></div>
+  </div></div>
+
+  <div class="sub" id="sub-lab"><div class="grid2">
+    <div class="card">
+      <h3>사각형 실험실</h3>
+      <p>꼭짓점 ㄱ, ㄴ, ㄷ, ㄹ을 움직여 미션의 사각형을 만들어 보세요. 측정 결과가 바로바로 바뀌어요.</p>
+      <h4>미션 <small>(눌러서 고르기)</small></h4>
+      <ul class="missions pickable" id="labMissions"></ul>
+      <div class="shape-info" id="labInfo"></div>
+    </div>
+    <div class="card">
+      <div class="toggles" id="labToggles">
+        <label><input type="checkbox" data-m="right" checked> 직각 ⌐</label>
+        <label><input type="checkbox" data-m="parallel" checked> 평행 &gt;</label>
+        <label><input type="checkbox" data-m="equal" checked> 같은 길이 ∥</label>
+        <label><input type="checkbox" data-m="angle" checked> 각도</label>
+      </div>
+      <svg class="board" id="labBoard" aria-label="사각형 지오보드"></svg>
+      <div class="lab-tools">
+        <button class="btn ghost sm" id="labReset">처음 모양</button>
+        <button class="btn ghost sm" id="labRandom">무작위 사각형</button>
+        <button class="btn sm" id="labAsk">🤖 네모봇에게 물어보기</button>
+        <button class="btn alt sm" id="labSend">📥 훈련소로 보내기</button>
+      </div>
+      <div class="measure" id="labMeasure"></div>
+    </div>
+  </div></div>
+
+  <div class="sub" id="sub-sum"><div class="grid2">
+    <div class="card">
+      <h3>사각형 성질 한눈에 보기</h3>
+      <div class="table-scroll"><table class="prop-table">
+        <thead><tr><th>이름</th><th>평행한 변</th><th>네 변의 길이<br>모두 같음</th><th>네 각<br>모두 직각</th><th>마주 보는 변<br>길이 같음</th><th>마주 보는 각<br>크기 같음</th></tr></thead>
+        <tbody>
+          <tr><td style="--c:#0d9488">사다리꼴</td><td>한 쌍 이상</td><td class="x">–</td><td class="x">–</td><td class="x">–</td><td class="x">–</td></tr>
+          <tr><td style="--c:#2563eb">평행사변형</td><td>두 쌍</td><td class="x">–</td><td class="x">–</td><td class="o">○</td><td class="o">○</td></tr>
+          <tr><td style="--c:#8b5cf6">마름모</td><td>두 쌍</td><td class="o">○</td><td class="x">–</td><td class="o">○</td><td class="o">○</td></tr>
+          <tr><td style="--c:#f0801d">직사각형</td><td>두 쌍</td><td class="x">–</td><td class="o">○</td><td class="o">○</td><td class="o">○</td></tr>
+          <tr><td style="--c:#e63973">정사각형</td><td>두 쌍</td><td class="o">○</td><td class="o">○</td><td class="o">○</td><td class="o">○</td></tr>
+        </tbody>
+      </table></div>
+      <p class="tip">○는 그 사각형이라면 <b>항상</b> 가지는 성질이에요. –는 가질 수도, 안 가질 수도 있다는 뜻이에요.</p>
+      <div class="callout">🤖 <b>네모봇에게 가르칠 때의 약속</b><br>정사각형은 직사각형이면서 마름모이기도 해요. 하지만 AI에게는 이름표를 하나만 붙일 수 있어서, <b>가장 안쪽(가장 정확한) 이름</b>을 알려 주기로 해요.</div>
+    </div>
+    <div class="card incl">
+      <h3>사각형 가족 관계도</h3>
+      <svg viewBox="0 0 520 330" role="img" aria-label="사각형 포함 관계도">
+        <rect x="6" y="6" width="508" height="318" rx="22" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+        <text x="24" y="34" font-family="Jua" font-size="19" fill="#475569">사각형</text>
+        <text x="500" y="312" font-family="Pretendard" font-size="12.5" fill="#64748b" text-anchor="end" font-weight="700">평행한 변이 없으면 → 일반 사각형</text>
+        <rect x="26" y="46" width="468" height="244" rx="20" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+        <text x="44" y="72" font-family="Jua" font-size="19" fill="#0f766e">사다리꼴</text>
+        <rect x="48" y="84" width="424" height="190" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <text x="66" y="110" font-family="Jua" font-size="19" fill="#1d4ed8">평행사변형</text>
+        <rect x="70" y="122" width="236" height="136" rx="16" fill="#f0801d" fill-opacity=".18" stroke="#f0801d" stroke-width="2"/>
+        <rect x="214" y="122" width="236" height="136" rx="16" fill="#8b5cf6" fill-opacity=".18" stroke="#8b5cf6" stroke-width="2"/>
+        <rect x="214" y="122" width="92" height="136" fill="#e63973" fill-opacity=".22"/>
+        <text x="86" y="196" font-family="Jua" font-size="19" fill="#c2410c">직사각형</text>
+        <text x="434" y="196" font-family="Jua" font-size="19" fill="#6d28d9" text-anchor="end">마름모</text>
+        <text x="260" y="196" font-family="Jua" font-size="16" fill="#be185d" text-anchor="middle">정사각형</text>
+      </svg>
+      <p class="tip" style="text-align:center">안쪽에 있는 사각형은 바깥쪽 사각형의 성질을 모두 가지고 있어요.</p>
+    </div>
+  </div></div>
+</div></section>
+
+<!-- ======================= THEORY ======================= -->
+<section class="page" id="page-theory"><div class="wrap">
+  <div class="page-head"><h2>② 의사결정트리 원리</h2><p>AI가 사각형을 분류하는 방법을 한 장씩 넘기며 알아봐요.</p></div>
+  <div class="card slides">
+    <div class="slide-top"><span id="slideNo"></span><div class="dots" id="slideDots"></div></div>
+
+    <div class="slide">
+      <h3>1. AI는 어떻게 배울까요? — 지도학습</h3>
+      <p>선생님이 문제와 정답을 함께 보여 주며 가르치듯, AI에게 <b>사각형 + 이름표(정답)</b>를 많이 보여 주면 AI가 스스로 규칙을 찾아내요.</p>
+      <p>이렇게 <b>정답이 붙은 데이터로 배우는 방법</b>을 <span class="key">지도학습</span>이라고 해요.</p>
+      <div class="flow">
+        <div class="flow-box"><div class="flow-ico" id="flowData"></div><b>① 데이터</b><span>사각형 + 이름표(정답)</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><div class="flow-ico">🧠</div><b>② 학습</b><span>분류하는 규칙(질문) 찾기</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><div class="flow-ico">🔮</div><b>③ 예측</b><span>처음 보는 사각형의 이름 맞히기</span></div>
+      </div>
+      <div class="chips"><span>데이터</span><span>정답(레이블)</span><span>학습</span><span>예측</span></div>
+    </div>
+
+    <div class="slide">
+      <h3>2. 의사결정트리는 스무고개예요</h3>
+      <div class="slide-split">
+        <div>
+          <p><b>의사결정트리</b>는 스무고개처럼 <b>예 / 아니오 질문</b>을 하나씩 던지며 범위를 좁혀 답을 찾는 AI 방법이에요.</p>
+          <p>오른쪽 사각형을 맞혀 볼까요?</p>
+          <div class="chat">
+            <div class="bubble q">평행한 변이 두 쌍인가요?</div><div class="bubble a">예!</div>
+            <div class="bubble q">네 각이 모두 직각인가요?</div><div class="bubble a">예!</div>
+            <div class="bubble q">네 변의 길이가 모두 같나요?</div><div class="bubble a">예!</div>
+            <div class="bubble ans">그렇다면… 정사각형!</div>
+          </div>
+        </div>
+        <div id="slide2Shape"></div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <h3>3. 트리는 이렇게 생겼어요</h3>
+      <p>나무를 거꾸로 뒤집은 모양이라서 <b>트리(나무)</b>라고 불러요.</p>
+      <div class="tree-box" id="anatomyTree"></div>
+      <div class="legend">
+        <div><b>🌱 뿌리 노드</b>맨 위의 첫 질문이에요.</div>
+        <div><b>❓ 질문 노드</b>중간에서 다시 나누는 질문이에요.</div>
+        <div><b>🌿 가지</b>‘예’와 ‘아니오’로 갈라지는 길이에요.</div>
+        <div><b>🍃 잎 노드</b>더 묻지 않는 끝, 결과(사각형 이름)가 있어요.</div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <h3>4. 좋은 질문은 어떻게 고를까요?</h3>
+      <p>여기 사각형 데이터 <b>14개</b>가 있어요. 질문 하나로 두 묶음으로 나눌 때, <b>같은 종류끼리 많이 모일수록</b> 좋은 질문이에요. 잘 모인 정도를 <span class="key">깔끔도</span>라고 불러 볼게요.</p>
+      <div class="pool" id="splitPool"></div>
+      <p class="tip">질문을 하나 눌러 데이터를 나눠 보세요.</p>
+      <div class="q-btns" id="splitBtns"></div>
+      <div class="split-result" id="splitResult"></div>
+      <p style="margin-top:12px"><button class="btn alt" id="splitBest">🤖 네모봇처럼 모든 질문 비교하기</button> <button class="btn ghost sm" id="splitNew">새 데이터</button></p>
+      <ol class="rank-list" id="splitRank"></ol>
+    </div>
+
+    <div class="slide">
+      <h3>5. 학습: 트리를 만드는 방법 · 예측: 트리 따라가기</h3>
+      <div class="slide-split">
+        <div>
+          <ol class="steps">
+            <li>전체 데이터에서 <b>가장 깔끔하게 나누는 질문</b>을 찾아 뿌리에 놓아요.</li>
+            <li>나뉜 묶음마다 다시 가장 좋은 질문을 찾아요.</li>
+            <li>묶음 안에 <b>한 종류만 남으면</b> 멈추고, 잎에 그 이름을 적어요.</li>
+            <li>새 사각형이 오면 뿌리부터 질문을 따라 내려가 도착한 잎의 이름을 말해요. 이것이 <b>예측</b>이에요.</li>
+          </ol>
+          <p><button class="btn" id="predBtn">새 사각형 넣어 보기 ▶</button></p>
+          <div class="pred-row"><div id="predShape"></div><ol id="predSteps"></ol></div>
+        </div>
+        <div><p class="tip" style="text-align:center">4번 카드의 데이터 14개로 네모봇이 만든 트리</p><div class="tree-box" id="learnTree"></div></div>
+      </div>
+    </div>
+
+    <div class="slide">
+      <h3>6. 조심! 데이터가 AI를 만들어요</h3>
+      <p>네모봇은 우리가 준 데이터로만 배워요. 그래서 데이터가 나쁘면 AI도 엉뚱해져요.</p>
+      <div class="warn-cards">
+        <div><b>📉 데이터가 너무 적으면</b>한 번도 보지 못한 사각형은 맞힐 수 없어요.</div>
+        <div><b>⚖️ 한쪽으로 치우치면</b>정사각형만 잔뜩 배우면 무엇이든 정사각형이라고 해요.</div>
+        <div><b>❌ 이름표가 틀리면</b>기울어진 정사각형을 마름모라고 가르치면, AI도 그렇게 믿어요.</div>
+      </div>
+      <div class="goodbox">💡 <b>의사결정트리의 좋은 점</b> — AI가 왜 그렇게 답했는지 질문 순서를 따라가며 확인할 수 있어요. 그래서 틀린 곳을 찾아 고치기도 쉬워요.</div>
+      <p class="tip" style="margin-top:12px">③ 스무고개 탐정과 ④ AI 조수 훈련소에서 직접 확인해 봐요!</p>
+    </div>
+
+    <div class="slide">
+      <h3>7. 확인 퀴즈</h3>
+      <p>맞힌 개수만큼 ⭐을 받아요. (4문제 중 2개 ⭐1 · 3개 ⭐2 · 4개 ⭐3)</p>
+      <div id="quiz"></div>
+      <div class="status" id="quizRes"></div>
+    </div>
+
+    <div class="slide-nav"><button class="btn ghost" id="slidePrev">← 이전</button><button class="btn" id="slideNext">다음 →</button></div>
+  </div>
+
+  <details class="card deep">
+    <summary>📘 더 깊이 알아보기 (선생님·보호자용)</summary>
+    <div class="deep-body">
+      <h4>1. 이 자료의 데이터</h4>
+      <table class="info-table">
+        <tr><th>속성 (feature)</th><td>평행한 변의 쌍 수(0·1·2), 직각의 수(0~4), 네 변의 길이가 모두 같은가(1·0). 학생은 이름표만 붙이고, 속성은 프로그램이 도형에서 측정합니다.</td></tr>
+        <tr><th>클래스 (label)</th><td>정사각형, 직사각형, 마름모, 평행사변형, 사다리꼴, 일반 사각형 — 포함 관계 때문에 ‘가장 정확한 이름’ 하나만 붙입니다.</td></tr>
+        <tr><th>후보 질문 (분할)</th><td>평행한 변 ≥ 2쌍 · 평행한 변 ≥ 1쌍 · 직각 = 4개 · 네 변 길이 같음 · 직각 ≥ 1개</td></tr>
+      </table>
+      <h4>2. 지니 불순도 (Gini impurity)</h4>
+      <p class="formula">G = 1 − Σ p<sub>k</sub><sup>2</sup></p>
+      <p>p<sub>k</sub>는 한 노드 안에서 클래스 k가 차지하는 비율입니다. 한 종류만 있으면 G = 0(순수)이고, 여러 종류가 고르게 섞일수록 커집니다. 화면의 ‘깔끔도’는 (1 − G) × 100입니다.</p>
+      <p>예) 정사각형 2개와 마름모 2개가 섞인 노드: G = 1 − (0.5² + 0.5²) = 0.5 → 깔끔도 50</p>
+      <h4>3. 분할 질문 고르기 (CART)</h4>
+      <p class="formula">이득 = G(부모) − [ n<sub>예</sub>/n · G(예) + n<sub>아니오</sub>/n · G(아니오) ]</p>
+      <p>모든 후보 질문에 대해 나뉜 두 노드의 불순도를 데이터 수로 가중 평균하고, 불순도가 가장 많이 줄어드는(이득이 가장 큰) 질문을 고릅니다. 이득이 같으면 목록에서 먼저 나온 질문을 씁니다.</p>
+      <h4>4. 멈춤 조건과 예측</h4>
+      <p>노드가 순수해지거나, 최대 깊이(4)에 이르거나, 불순도를 줄이는 질문이 없으면 멈추고 그 노드의 다수 클래스를 잎의 결과로 정합니다. 예측할 때는 새 데이터를 뿌리부터 질문에 따라 내려보내 도착한 잎의 클래스를 답합니다.</p>
+      <h4>5. 과적합과 데이터 품질</h4>
+      <p>트리를 너무 깊게 키우면 학습 데이터의 우연한 특징까지 외워 새 데이터에서 틀리는 과적합이 생깁니다. 실제로는 최대 깊이 제한, 가지치기 등으로 막습니다. 또 레이블 오류는 잎의 다수결을 바꾸어 예측을 왜곡합니다(④ 훈련소 미션 2에서 체험).</p>
+      <h4>6. 엔트리 연계</h4>
+      <p>④ 훈련소에서 내려받은 CSV를 엔트리 데이터 테이블로 불러와 ‘분류: 숫자(결정 트리)’ 모델의 속성으로 ‘평행한변쌍수·직각수·네변같음’을, 클래스로 ‘사각형이름’을 지정하면 같은 데이터로 학습할 수 있습니다.</p>
+    </div>
+  </details>
+</div></section>
+
+<!-- ======================= DETECTIVE ======================= -->
+<section class="page" id="page-detective"><div class="wrap">
+  <div class="page-head"><h2>③ 스무고개 탐정</h2><p>의사결정트리의 질문에 <b>예 / 아니오</b>로 답하며 사각형의 정체를 밝혀요. 모눈 칸을 세어 판단해 보세요!</p></div>
+  <div class="card intro-card" id="detIntro"></div>
+  <div id="detGame" hidden>
+    <div class="hud" id="detHud"></div>
+    <div class="grid2">
+      <div class="card">
+        <svg class="board" id="detBoard" aria-label="탐정 지오보드"></svg>
+        <div class="det-q" id="detQ"></div>
+        <div class="det-btns"><button class="btn yes" id="detYes">예</button><button class="btn no" id="detNo">아니오</button><button class="btn ghost sm" id="detHint">🔍 돋보기 (−5점)</button></div>
+        <div class="status" id="detMsg"></div>
+      </div>
+      <div class="card"><h3>🕵️ 탐정 수첩: 분류 트리</h3><p class="tip">지금 대답하는 질문이 노란색으로 표시돼요.</p><div class="tree-box" id="detTree"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ======================= TRAIN ======================= -->
+<section class="page" id="page-train"><div class="wrap">
+  <div class="page-head"><h2>④ AI 조수 훈련소</h2><p>사각형에 이름표(정답)를 붙여 네모봇을 가르쳐요. 네모봇은 여러분이 만든 데이터로 의사결정트리를 스스로 만들어요.</p></div>
+  <div class="subnav" id="trainNav">
+    <button data-sub="free" class="on">자유 훈련</button>
+    <button data-sub="m1">미션 1 · 데이터 카드 6장</button>
+    <button data-sub="m2">미션 2 · 오염 데이터 탐정</button>
+  </div>
+
+  <div class="sub on" id="sub-free"><div class="train-grid">
+    <div class="card">
+      <div class="card-head"><h3>1. 이름표 붙이기</h3><label class="switch"><input type="checkbox" id="helperOn" checked> 정답 확인 도우미</label></div>
+      <svg class="board" id="trainBoard" aria-label="훈련 지오보드"></svg>
+      <div class="row"><label class="switch"><input type="checkbox" id="trainMarks"> 측정 표시 보기</label><button class="btn ghost sm" id="trainSkip">다른 사각형</button></div>
+      <p class="ask">이 사각형의 <b>가장 정확한 이름</b>은?</p>
+      <div class="lbl-btns" id="trainLbls"></div>
+      <div class="status" id="trainMsg"></div>
+      <div class="bot-box"><div id="botFace"></div><div style="flex:1"><b id="botLv"></b><p id="botSay"></p><div class="lvbar"><span id="lvFill"></span></div></div></div>
+    </div>
+    <div class="col">
+      <div class="card"><h3>2. 네모봇의 의사결정트리</h3><div class="tree-box" id="trainTree"></div></div>
+      <div class="card">
+        <div class="card-head"><h3>3. 학습 데이터 <small id="dataCount"></small></h3><div><button class="btn ghost sm" id="csvBtn">⬇ CSV (엔트리용)</button><button class="btn ghost sm" id="clearBtn">전체 지우기</button></div></div>
+        <div class="table-wrap"><table class="data-table" id="dataTable"></table></div>
+        <p class="tip">이름표를 잘못 붙였다면 표에서 바로 고칠 수 있어요. ‘사용’을 끄면 그 데이터는 학습에서 빠져요.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>4. 네모봇 시험 보기</h3><div><button class="btn sm" id="testBtn">시험 시작</button><button class="btn ghost sm" id="newTestBtn">새 시험지</button></div></div>
+        <div class="status" id="testSum">처음 보는 사각형 12개로 네모봇의 실력을 확인해요. 데이터 6개 이상이면 ⭐을 받을 수 있어요.</div>
+        <div class="test-grid" id="testGrid"></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="sub" id="sub-m1">
+    <div class="card mission-intro"><h3>미션 1 · 데이터 카드 6장</h3><p>네모봇에게 가르칠 수 있는 카드는 딱 <b>6장</b>! 아래 12장 중에서 어떤 카드를 골라야 처음 보는 사각형 12개를 가장 많이 맞힐까요?</p></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><h3>카드 고르기 <small id="m1Count">0 / 6</small></h3><div><button class="btn ghost sm" id="m1New">새 카드</button><button class="btn sm" id="m1Go">학습 & 시험</button></div></div>
+        <div class="pool-grid" id="m1Pool"></div>
+      </div>
+      <div class="card"><h3>네모봇의 트리</h3><div class="tree-box" id="m1Tree"></div><div class="status" id="m1Sum"></div><div class="test-grid" id="m1Test"></div></div>
+    </div>
+  </div>
+
+  <div class="sub" id="sub-m2">
+    <div class="card mission-intro"><h3>미션 2 · 오염 데이터 탐정</h3><p>누군가 학습 데이터에 <b>틀린 이름표</b>를 붙여 놓았어요! 그래서 네모봇이 자꾸 틀려요. <b>측정값</b>과 <b>이름표</b>를 비교해 틀린 이름표를 찾아 고쳐 주세요.<br>목표: 시험 정확도 100% + 숨은 오염 데이터 모두 찾기</p></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><h3>학습 데이터 18개 <small id="m2Changes"></small></h3><div><button class="btn ghost sm" id="m2Reset">처음부터</button></div></div>
+        <div class="table-wrap tall"><table class="data-table" id="m2Table"></table></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>네모봇의 트리</h3><div><button class="btn sm" id="m2Test">시험 보기</button></div></div>
+        <p class="tip">잎 아래 색 막대는 그 잎에 모인 데이터의 이름표 비율이에요. 여러 색이 섞인 잎을 의심해 보세요!</p>
+        <div class="tree-box" id="m2Tree"></div><div class="status" id="m2Sum"></div><div class="test-grid" id="m2Grid"></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+</main>
+
+<footer>네모의 꿈 · 의사결정트리로 배우는 사각형 분류 — 머신러닝 교육 자료 · 제작 김다인</footer>
+
+<div id="toast"></div>
+<div class="modal" id="modal" hidden><div class="modal-card"><h3 id="modalTitle"></h3><div id="modalBody"></div><p style="text-align:right;margin-top:12px"><button class="btn ghost" id="modalClose">닫기</button></p></div></div>
+
+<script>
+'use strict';
+/* =========================================================
+   네모의 꿈 – 핵심 로직
+   (도형 분석 · 도형 생성 · 의사결정트리(CART, 지니 불순도))
+   ========================================================= */
+const SHAPES = ['정사각형', '직사각형', '마름모', '평행사변형', '사다리꼴', '일반 사각형'];
+const COLORS = {
+  '정사각형': '#e63973', '직사각형': '#f0801d', '마름모': '#8b5cf6',
+  '평행사변형': '#2563eb', '사다리꼴': '#0d9488', '일반 사각형': '#64748b'
+};
+const VLABEL = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ'];
+const GW = 10, GH = 8; // 지오보드 크기(칸)
+
+/* ---------- 벡터 ---------- */
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const mul = (a, k) => [a[0] * k, a[1] * k];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
+const len2 = a => dot(a, a);
+const len = a => Math.sqrt(len2(a));
+const norm = a => { const l = len(a) || 1; return [a[0] / l, a[1] / l]; };
+const edgesOf = P => P.map((p, i) => sub(P[(i + 1) % 4], p));
+const isAxis = v => v[0] === 0 || v[1] === 0;
+
+function orient(a, b, c) { return Math.sign(cross(sub(b, a), sub(c, a))); }
+function onSeg(a, b, p) {
+  return Math.min(a[0], b[0]) <= p[0] && p[0] <= Math.max(a[0], b[0]) &&
+         Math.min(a[1], b[1]) <= p[1] && p[1] <= Math.max(a[1], b[1]);
+}
+function segsTouch(p1, p2, p3, p4) {
+  const o1 = orient(p1, p2, p3), o2 = orient(p1, p2, p4), o3 = orient(p3, p4, p1), o4 = orient(p3, p4, p2);
+  if (o1 !== o2 && o3 !== o4) return true;
+  if (o1 === 0 && onSeg(p1, p2, p3)) return true;
+  if (o2 === 0 && onSeg(p1, p2, p4)) return true;
+  if (o3 === 0 && onSeg(p3, p4, p1)) return true;
+  if (o4 === 0 && onSeg(p3, p4, p2)) return true;
+  return false;
+}
+
+/* ---------- 사각형 검사 ---------- */
+function checkQuad(P) {
+  for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++)
+    if (P[i][0] === P[j][0] && P[i][1] === P[j][1]) return { ok: false, msg: '꼭짓점 두 개가 겹쳤어요.' };
+  const E = edgesOf(P);
+  for (let i = 0; i < 4; i++)
+    if (cross(E[(i + 3) % 4], E[i]) === 0) return { ok: false, msg: '세 꼭짓점이 한 직선 위에 있어요.' };
+  if (segsTouch(P[0], P[1], P[2], P[3]) || segsTouch(P[1], P[2], P[3], P[0]))
+    return { ok: false, msg: '변끼리 서로 엇갈렸어요.' };
+  return { ok: true };
+}
+
+function classifyF(pp, ra, eq) {
+  if (pp === 2) {
+    if (ra === 4 && eq) return '정사각형';
+    if (ra === 4) return '직사각형';
+    if (eq) return '마름모';
+    return '평행사변형';
+  }
+  if (pp === 1) return '사다리꼴';
+  return '일반 사각형';
+}
+
+function analyze(P) {
+  const chk = checkQuad(P);
+  const E = edgesOf(P);
+  const L = E.map(len2);
+  const par = [cross(E[0], E[2]) === 0, cross(E[1], E[3]) === 0];
+  const pp = par.filter(Boolean).length;
+  const right = [0, 1, 2, 3].map(i => dot(E[(i + 3) % 4], E[i]) === 0);
+  const ra = right.filter(Boolean).length;
+  const eq = L.every(l => l === L[0]);
+  let area2 = 0;
+  for (let i = 0; i < 4; i++) area2 += cross(P[i], P[(i + 1) % 4]);
+  const s = Math.sign(area2);
+  const angles = [], convex = [];
+  for (let i = 0; i < 4; i++) {
+    const a = sub(P[(i + 3) % 4], P[i]), b = sub(P[(i + 1) % 4], P[i]);
+    const c = Math.max(-1, Math.min(1, dot(a, b) / (len(a) * len(b) || 1)));
+    const th = Math.acos(c) * 180 / Math.PI;
+    const cv = Math.sign(cross(E[(i + 3) % 4], E[i])) === s;
+    convex.push(cv);
+    angles.push(Math.round(cv ? th : 360 - th));
+  }
+  const type = chk.ok ? classifyF(pp, ra, eq) : null;
+  return { ok: chk.ok, msg: chk.msg, E, L, par, pp, right, ra, eq, angles, convex, type,
+           feat: { pp, ra, eq: eq ? 1 : 0 } };
+}
+
+/* 이 사각형이 가질 수 있는 모든 이름 (포함 관계) */
+function allNames(a) {
+  const n = ['사각형'];
+  if (!a.ok) return n;
+  if (a.pp >= 1) n.push('사다리꼴');
+  if (a.pp === 2) n.push('평행사변형');
+  if (a.pp === 2 && a.eq) n.push('마름모');
+  if (a.ra === 4) n.push('직사각형');
+  if (a.ra === 4 && a.eq) n.push('정사각형');
+  if (a.pp === 0) n.push('일반 사각형');
+  return n;
+}
+
+/* ---------- 무작위 도형 생성 ---------- */
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const quadFrom = (v, w) => [[0, 0], v, add(v, w), w];
+
+const RAW = {
+  '정사각형': (o = {}) => {
+    const tilt = o.tilt || (!o.axis && Math.random() < 0.35);
+    const v = tilt ? pick([[1, 1], [2, 1], [1, 2], [2, 2], [3, 1], [1, 3], [2, 3], [3, 2]]) : [R(2, 5), 0];
+    return quadFrom(v, [-v[1], v[0]]);
+  },
+  '직사각형': () => {
+    if (Math.random() < 0.65) {
+      const a = R(2, 7); let c = R(1, 5);
+      if (c === a) c = a > 3 ? a - 2 : a + 1;
+      return [[0, 0], [a, 0], [a, c], [0, c]];
+    }
+    const b = pick([[1, 1], [2, 1], [1, 2], [3, 1], [1, 3]]);
+    const k1 = R(1, 3); let k2 = R(1, 3);
+    if (k1 === k2) k2 = k1 === 3 ? 1 : k1 + 1;
+    return quadFrom(mul(b, k1), [-b[1] * k2, b[0] * k2]);
+  },
+  '마름모': () => {
+    if (Math.random() < 0.6) {
+      let p = R(1, 4); const q = R(1, 3);
+      if (p === q) p = q + 1;
+      return [[-p, 0], [0, -q], [p, 0], [0, q]];
+    }
+    const [v, w] = pick([[[2, 1], [1, 2]], [[3, 1], [1, 3]], [[5, 0], [3, 4]], [[5, 0], [4, 3]], [[3, 2], [2, 3]], [[1, 3], [3, 1]]]);
+    return quadFrom(v, w);
+  },
+  '평행사변형': () => quadFrom([R(2, 6), 0], [pick([-3, -2, -1, 1, 2, 3]), R(2, 4)]),
+  '사다리꼴': () => {
+    const a = R(3, 7), b = R(1, 6), h = R(2, 4), x1 = R(-2, 3);
+    return [[0, 0], [a, 0], [x1 + b, h], [x1, h]];
+  },
+  '일반 사각형': () => {
+    const pts = Array.from({ length: 4 }, () => [R(0, 8), R(0, 6)]);
+    const c = [pts.reduce((s, p) => s + p[0], 0) / 4, pts.reduce((s, p) => s + p[1], 0) / 4];
+    return pts.sort((p, q) => Math.atan2(p[1] - c[1], p[0] - c[0]) - Math.atan2(q[1] - c[1], q[0] - c[0]));
+  }
+};
+
+function transform(P) {
+  let Q = P.map(p => [p[0], p[1]]);
+  const k = R(0, 3);
+  for (let i = 0; i < k; i++) Q = Q.map(([x, y]) => [-y, x]);
+  if (Math.random() < 0.5) Q = Q.map(([x, y]) => [-x, y]);
+  return Q;
+}
+function place(P) {
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const mx = Math.min(...xs), my = Math.min(...ys);
+  const w = Math.max(...xs) - mx, h = Math.max(...ys) - my;
+  if (w > GW - 2 || h > GH - 2) return null;
+  const ox = R(1, GW - 1 - w) - mx, oy = R(1, GH - 1 - h) - my;
+  return P.map(([x, y]) => [x + ox, y + oy]);
+}
+const isTiltedQuad = P => edgesOf(P).every(e => !isAxis(e));
+
+const FALLBACK = {
+  '정사각형': [[3, 2], [6, 2], [6, 5], [3, 5]], '직사각형': [[2, 2], [7, 2], [7, 5], [2, 5]],
+  '마름모': [[5, 1], [7, 4], [5, 7], [3, 4]], '평행사변형': [[2, 2], [6, 2], [8, 5], [4, 5]],
+  '사다리꼴': [[2, 2], [8, 2], [6, 5], [3, 5]], '일반 사각형': [[2, 2], [7, 1], [8, 6], [3, 5]]
+};
+function genShape(type, opt = {}) {
+  for (let t = 0; t < 600; t++) {
+    let P = place(transform(RAW[type](opt)));
+    if (!P) continue;
+    const a = analyze(P);
+    if (!a.ok || a.type !== type) continue;
+    if (Math.min(...a.angles) < 20) continue;
+    if (opt.tilt && !isTiltedQuad(P)) continue;
+    if (type === '일반 사각형' && !a.convex.every(Boolean) && Math.random() < 0.7) continue;
+    return P;
+  }
+  return FALLBACK[type].map(p => [p[0], p[1]]);
+}
+
+/* ---------- 의사결정트리 ---------- */
+const QUESTIONS = [
+  { id: 'pp2', f: 'pp', t: 2, text: '평행한 변이 두 쌍인가요?', short: '평행한 변 2쌍?' },
+  { id: 'pp1', f: 'pp', t: 1, text: '평행한 변이 한 쌍이라도 있나요?', short: '평행한 변 있음?' },
+  { id: 'ra4', f: 'ra', t: 4, text: '네 각이 모두 직각인가요?', short: '네 각 모두 직각?' },
+  { id: 'eq', f: 'eq', t: 1, text: '네 변의 길이가 모두 같나요?', short: '네 변 길이 같음?' },
+  { id: 'ra1', f: 'ra', t: 1, text: '직각이 하나라도 있나요?', short: '직각 있음?' }
+];
+QUESTIONS.forEach(q => { q.test = f => f[q.f] >= q.t; });
+const Q = id => QUESTIONS.find(q => q.id === id);
+
+function countLabels(rows) { const c = {}; rows.forEach(r => { c[r.label] = (c[r.label] || 0) + 1; }); return c; }
+function giniOf(c, n) { if (!n) return 0; let g = 1; for (const k in c) g -= (c[k] / n) ** 2; return g; }
+function majority(c) {
+  let best = null, bv = -1;
+  SHAPES.forEach(s => { if ((c[s] || 0) > bv) { bv = c[s] || 0; best = s; } });
+  return best;
+}
+function buildTree(rows, depth = 0, maxDepth = 4) {
+  const counts = countLabels(rows), n = rows.length, g = giniOf(counts, n);
+  const base = { n, counts, gini: g };
+  if (n === 0) return Object.assign(base, { leaf: true, label: null });
+  if (g === 0 || depth >= maxDepth) return Object.assign(base, { leaf: true, label: majority(counts) });
+  let best = null;
+  QUESTIONS.forEach(q => {
+    const yes = rows.filter(r => q.test(r.f)), no = rows.filter(r => !q.test(r.f));
+    if (!yes.length || !no.length) return;
+    const w = (yes.length * giniOf(countLabels(yes), yes.length) + no.length * giniOf(countLabels(no), no.length)) / n;
+    const gain = g - w;
+    if (!best || gain > best.gain + 1e-9) best = { q, gain, yes, no };
+  });
+  if (!best || best.gain <= 1e-9) return Object.assign(base, { leaf: true, label: majority(counts) });
+  return Object.assign(base, {
+    q: best.q, gain: best.gain,
+    yes: buildTree(best.yes, depth + 1, maxDepth), no: buildTree(best.no, depth + 1, maxDepth)
+  });
+}
+function predict(tree, f) {
+  const path = [tree]; let n = tree;
+  while (!n.leaf) { n = n.q.test(f) ? n.yes : n.no; path.push(n); }
+  return { label: n.label, path };
+}
+const leaf = label => ({ leaf: true, label });
+/* 교과서식 분류 순서 (스무고개 탐정용 정답 트리) */
+const TEACHER = {
+  q: Q('pp2'),
+  yes: { q: Q('ra4'),
+    yes: { q: Q('eq'), yes: leaf('정사각형'), no: leaf('직사각형') },
+    no: { q: Q('eq'), yes: leaf('마름모'), no: leaf('평행사변형') } },
+  no: { q: Q('pp1'), yes: leaf('사다리꼴'), no: leaf('일반 사각형') }
+};
+
+function josa(w, a, b) {
+  const c = w.charCodeAt(w.length - 1);
+  const has = c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 !== 0;
+  return w + (has ? a : b);
+}
+
+if (typeof module !== 'undefined') module.exports = { SHAPES, analyze, genShape, buildTree, predict, TEACHER, QUESTIONS, allNames, isTiltedQuad, josa };
+
+/* =========================================================
+   네모의 꿈 – 화면 / 게임 로직
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const NS = 'http://www.w3.org/2000/svg';
+function S(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function T(parent, x, y, str, attrs = {}) { const t = S('text', Object.assign({ x, y }, attrs), parent); t.textContent = str; return t; }
+const ALLMARKS = { right: 1, parallel: 1, equal: 1, angle: 1, vlabel: 1 };
+const INK = '#1c2541';
+
+/* ---------- 저장 ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('nemo_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('nemo_' + k, JSON.stringify(v)); } catch (e) { /* 저장 불가 환경 */ } }
+};
+
+/* ---------- 별 · 칭호 ---------- */
+const STAR_MAX = {
+  perp1: 1, perp2: 1, par1: 1, par2: 1, par3: 1,
+  'lab-사다리꼴': 1, 'lab-평행사변형': 1, 'lab-마름모': 1, 'lab-직사각형': 1, 'lab-정사각형': 1, 'lab-tilt': 1, 'lab-rtrap': 1,
+  'theory-quiz': 3, detective: 3, 'train-free': 3, 'train-m1': 3, 'train-m2': 3
+};
+const STAGE = {
+  explore: k => /^(perp|par|lab)/.test(k), theory: k => k.startsWith('theory'),
+  detective: k => k === 'detective', train: k => k.startsWith('train')
+};
+const RANKS = [[0, '🌱 새싹 탐험가'], [6, '📐 사각형 탐험가'], [12, '🔍 사각형 탐정'], [18, '🌳 트리 박사'], [24, '🤖 AI 조련사']];
+let progress = store.get('progress', {});
+const sumStars = (f = () => true) => Object.keys(STAR_MAX).filter(f).reduce((s, k) => s + Math.min(progress[k] || 0, STAR_MAX[k]), 0);
+const maxStars = (f = () => true) => Object.keys(STAR_MAX).filter(f).reduce((s, k) => s + STAR_MAX[k], 0);
+function refreshStars() {
+  $('#starNow').textContent = sumStars();
+  $('#starMax').textContent = maxStars();
+  $$('[data-stars]').forEach(el => { const f = STAGE[el.dataset.stars]; el.textContent = `⭐ ${sumStars(f)} / ${maxStars(f)}`; });
+  const n = sumStars(); let r = RANKS[0][1], next = null;
+  RANKS.forEach(([min, name], i) => { if (n >= min) { r = name; next = RANKS[i + 1]; } });
+  $('#rank').innerHTML = `지금 나의 칭호: <span style="color:var(--ink)">${r}</span>` + (next ? ` · 별 ${next[0] - n}개 더 모으면 ${next[1]}` : ' · 최고 칭호 달성!');
+}
+function award(key, n) {
+  n = Math.min(n, STAR_MAX[key]);
+  const prev = progress[key] || 0;
+  if (n > prev) { progress[key] = n; store.set('progress', progress); refreshStars(); toast(`⭐ 별 ${n - prev}개를 얻었어요!`, 'star'); return true; }
+  return false;
+}
+const starStr = n => '⭐'.repeat(n) + '☆'.repeat(3 - n);
+
+/* ---------- 알림 · 모달 · 폭죽 ---------- */
+let toastTimer;
+function toast(msg, cls = '') {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show ' + cls;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = ''; }, 2200);
+}
+function showModal(title, html, setup) {
+  $('#modalTitle').textContent = title; $('#modalBody').innerHTML = html;
+  $('#modal').hidden = false; if (setup) setup($('#modalBody'));
+}
+function closeModal() { $('#modal').hidden = true; }
+function confetti() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = document.createElement('div'); box.className = 'confetti';
+  const cols = Object.values(COLORS).concat('#ffb703');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('i');
+    s.style.left = Math.random() * 100 + 'vw'; s.style.background = pick(cols);
+    s.style.animationDelay = Math.random() * .3 + 's'; s.style.animationDuration = (1 + Math.random() * .9) + 's';
+    box.appendChild(s);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 2300);
+}
+function setMsg(sel, html, cls = '') { const el = $(sel); el.innerHTML = html; el.className = 'status ' + cls; }
+
+/* ---------- 네모봇 ---------- */
+function robot(mood = 'happy', size = 80) {
+  const mouth = { happy: 'M31 57 Q45 69 59 57', think: 'M33 61 L57 61', sad: 'M31 65 Q45 54 59 65' }[mood];
+  const eye = mood === 'think' ? '<circle cx="36" cy="44" r="5" fill="#1c2541"/><circle cx="58" cy="42" r="5" fill="#1c2541"/>' : '<circle cx="34" cy="44" r="5" fill="#1c2541"/><circle cx="56" cy="44" r="5" fill="#1c2541"/>';
+  return `<svg class="robot" viewBox="0 0 90 90" width="${size}" height="${size}" aria-hidden="true"><line x1="45" y1="7" x2="45" y2="19" stroke="#1c2541" stroke-width="3"/><circle cx="45" cy="7" r="5" fill="#ffb703"/><rect x="5" y="40" width="9" height="17" rx="3" fill="#2f45c9"/><rect x="76" y="40" width="9" height="17" rx="3" fill="#2f45c9"/><rect x="12" y="19" width="66" height="60" rx="14" fill="#4361ee"/><rect x="20" y="28" width="50" height="42" rx="9" fill="#eef1ff"/>${eye}<path d="${mouth}" stroke="#1c2541" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>`;
+}
+
+/* ---------- 지오보드 그리기 ---------- */
+let clipSeq = 0;
+function initBoard(svg) {
+  svg.setAttribute('viewBox', `-0.7 -0.7 ${GW + 1.4} ${GH + 1.4}`);
+  svg.innerHTML = '';
+  const id = 'clip' + (++clipSeq);
+  const cp = S('clipPath', { id }, S('defs', {}, svg));
+  S('rect', { x: -0.5, y: -0.5, width: GW + 1, height: GH + 1 }, cp);
+  S('rect', { x: -0.6, y: -0.6, width: GW + 1.2, height: GH + 1.2, rx: 0.35, class: 'board-bg' }, svg);
+  const g = S('g', {}, svg);
+  for (let x = 0; x <= GW; x++) S('line', { x1: x, y1: 0, x2: x, y2: GH, class: 'grid-line' }, g);
+  for (let y = 0; y <= GH; y++) S('line', { x1: 0, y1: y, x2: GW, y2: y, class: 'grid-line' }, g);
+  for (let x = 0; x <= GW; x++) for (let y = 0; y <= GH; y++) S('circle', { cx: x, cy: y, r: 0.07, class: 'grid-dot' }, g);
+  const L = { svg, clip: id, shape: S('g', {}, svg), marks: S('g', {}, svg), labels: S('g', {}, svg), handles: S('g', {}, svg) };
+  return L;
+}
+function clearLayers(L) { ['shape', 'marks', 'labels', 'handles'].forEach(k => { L[k].innerHTML = ''; }); }
+const ptsStr = P => P.map(p => p.join(',')).join(' ');
+
+function rightMark(g, at, u, w, s, color = INK, sw = 0.055) {
+  const a = add(at, mul(u, s)), b = add(a, mul(w, s)), c = add(at, mul(w, s));
+  S('path', { d: `M${a} L${b} L${c}`, fill: 'none', stroke: color, 'stroke-width': sw }, g);
+}
+
+function drawMarks(g, lg, P, a, m) {
+  if (!a.ok) return;
+  const E = a.E;
+  const dirs = P.map((p, i) => {
+    const u = norm(sub(P[(i + 3) % 4], p)), w = norm(sub(P[(i + 1) % 4], p));
+    let b = norm(add(u, w)); if (!a.convex[i]) b = mul(b, -1);
+    return { u, w, b };
+  });
+  if (m.right) a.right.forEach((r, i) => { if (r) rightMark(g, P[i], dirs[i].u, dirs[i].w, 0.32); });
+  if (m.parallel) [0, 1].forEach(k => {
+    if (!a.par[k]) return;
+    [k, k + 2].forEach(i => {
+      const d = norm(i < 2 ? E[i] : mul(E[i], -1)), n = [-d[1], d[0]];
+      for (let j = 0; j <= k; j++) {
+        const c = add(add(P[i], mul(E[i], 0.42)), mul(d, (j - k / 2) * 0.2));
+        const tip = add(c, mul(d, 0.09)), w1 = add(add(c, mul(d, -0.09)), mul(n, 0.15)), w2 = add(add(c, mul(d, -0.09)), mul(n, -0.15));
+        S('polyline', { points: ptsStr([w1, tip, w2]), fill: 'none', stroke: '#0369a1', 'stroke-width': 0.06, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+      }
+    });
+  });
+  if (m.equal) {
+    const groups = {}; a.L.forEach((l, i) => { (groups[l] = groups[l] || []).push(i); });
+    let gi = 0;
+    Object.values(groups).filter(x => x.length >= 2).forEach(grp => {
+      gi++;
+      grp.forEach(i => {
+        const d = norm(E[i]), n = [-d[1], d[0]];
+        for (let j = 0; j < gi; j++) {
+          const c = add(add(P[i], mul(E[i], 0.7)), mul(d, (j - (gi - 1) / 2) * 0.13));
+          S('line', { x1: c[0] - n[0] * 0.17, y1: c[1] - n[1] * 0.17, x2: c[0] + n[0] * 0.17, y2: c[1] + n[1] * 0.17, stroke: '#b45309', 'stroke-width': 0.06, 'stroke-linecap': 'round' }, g);
+        }
+      });
+    });
+  }
+  if (m.angle) a.angles.forEach((deg, i) => { const p = add(P[i], mul(dirs[i].b, a.right[i] ? 0.82 : 0.7)); T(lg, p[0], p[1], deg + '°', { class: 'angle-txt' }); });
+  if (m.vlabel) P.forEach((p, i) => { const q = add(p, mul(dirs[i].b, -0.48)); T(lg, q[0], q[1], VLABEL[i], { class: 'vlabel' }); });
+}
+function drawQuad(L, P, a, opt = {}) {
+  const col = opt.color || (a.ok ? COLORS[a.type] : '#e11d48');
+  S('polygon', { points: ptsStr(P), fill: col, 'fill-opacity': a.ok ? 0.2 : 0.08, stroke: col, 'stroke-width': 0.09, 'stroke-linejoin': 'round', 'stroke-dasharray': a.ok ? 'none' : '0.22 0.16' }, L.shape);
+  drawMarks(L.marks, L.labels, P, a, opt.marks || {});
+}
+function drawHandles(L, P, colors) {
+  P.forEach((p, i) => {
+    const g = S('g', { class: 'handle', 'data-h': i }, L.handles);
+    S('circle', { cx: p[0], cy: p[1], r: 0.55, fill: 'transparent' }, g);
+    S('circle', { cx: p[0], cy: p[1], r: 0.23, class: 'handle-dot', style: colors ? `stroke:${colors[i]}` : '' }, g);
+  });
+}
+function toSvg(svg, e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+function makeDraggable(svg, getPts, setPt, onEnd) {
+  let drag = -1;
+  svg.addEventListener('pointerdown', e => {
+    const h = e.target.closest('[data-h]'); if (!h) return;
+    drag = +h.dataset.h; svg.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  svg.addEventListener('pointermove', e => {
+    if (drag < 0) return;
+    const p = toSvg(svg, e);
+    const x = Math.max(0, Math.min(GW, Math.round(p.x))), y = Math.max(0, Math.min(GH, Math.round(p.y)));
+    const pts = getPts();
+    if (pts[drag][0] === x && pts[drag][1] === y) return;
+    if (pts.some((q, i) => i !== drag && q[0] === x && q[1] === y)) return;
+    setPt(drag, [x, y]);
+  });
+  const end = () => { if (drag >= 0) { drag = -1; if (onEnd) onEnd(); } };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+}
+
+/* 작은 도형 그림 (데이터 표 · 카드용) */
+function miniBoard(P, opt = {}) {
+  const svg = S('svg', { class: 'mini' });
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+  const w = Math.max(...xs) - Math.min(...xs) + 1.4, h = Math.max(...ys) - Math.min(...ys) + 1.4, s = Math.max(w, h);
+  const vx = Math.min(...xs) - 0.7 - (s - w) / 2, vy = Math.min(...ys) - 0.7 - (s - h) / 2;
+  svg.setAttribute('viewBox', `${vx} ${vy} ${s} ${s}`);
+  if (opt.grid !== false) {
+    for (let x = Math.ceil(vx); x <= vx + s; x++) S('line', { x1: x, y1: vy, x2: x, y2: vy + s, stroke: '#e6ebf5', 'stroke-width': s * 0.012 }, svg);
+    for (let y = Math.ceil(vy); y <= vy + s; y++) S('line', { x1: vx, y1: y, x2: vx + s, y2: y, stroke: '#e6ebf5', 'stroke-width': s * 0.012 }, svg);
+  }
+  const a = analyze(P), col = opt.color || COLORS[a.type];
+  S('polygon', { points: ptsStr(P), fill: col, 'fill-opacity': opt.solid ? 0.85 : 0.25, stroke: col, 'stroke-width': s * 0.035, 'stroke-linejoin': 'round' }, svg);
+  if (opt.marks) { const g = S('g', {}, svg); drawMarks(g, g, P, a, opt.marks); }
+  return svg;
+}
+
+/* ---------- 의사결정트리 그리기 ---------- */
+function drawTree(box, tree, opt = {}) {
+  box.innerHTML = '';
+  if (!tree) { box.innerHTML = `<div class="empty">${opt.empty || '아직 트리가 없어요.'}</div>`; return; }
+  const nodes = []; let leafX = 0, maxD = 0;
+  (function rec(n, d) {
+    n._d = d; maxD = Math.max(maxD, d);
+    if (n.leaf) n._x = leafX++; else { rec(n.yes, d + 1); rec(n.no, d + 1); n._x = (n.yes._x + n.no._x) / 2; }
+    nodes.push(n);
+  })(tree, 0);
+  const CW = 132, RH = 96, NW = 118, NH = 50, PAD = 8;
+  const W = leafX * CW + PAD * 2, H = (maxD + 1) * RH - RH + NH + PAD * 2;
+  const svg = S('svg', { viewBox: `0 0 ${W} ${H}`, class: 'tree-svg', role: 'img', 'aria-label': '의사결정트리' });
+  svg.style.maxWidth = W + 'px'; svg.style.minWidth = Math.min(W, leafX * 78) + 'px';
+  const pos = n => [PAD + n._x * CW + CW / 2, PAD + n._d * RH + NH / 2];
+  const onPath = new Set(opt.path || []);
+  nodes.forEach(n => {
+    if (n.leaf) return;
+    [['yes', '예'], ['no', '아니오']].forEach(([k, lab]) => {
+      const c = n[k], [x1, y1] = pos(n), [x2, y2] = pos(c);
+      const hot = onPath.has(n) && onPath.has(c);
+      S('path', { d: `M${x1},${y1 + NH / 2} C${x1},${y1 + NH / 2 + 26} ${x2},${y2 - NH / 2 - 26} ${x2},${y2 - NH / 2}`, class: 'tree-edge' + (hot ? ' hot' : '') }, svg);
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      const g = S('g', {}, svg);
+      const tw = k === 'yes' ? 24 : 40;
+      S('rect', { x: mx - tw / 2, y: my - 9, width: tw, height: 18, rx: 9, class: 'edge-tag ' + k }, g);
+      T(g, mx, my, lab, { class: 'edge-txt' });
+    });
+  });
+  nodes.forEach(n => {
+    const [x, y] = pos(n);
+    const g = S('g', { class: 'tree-node' + (onPath.has(n) ? ' hot' : '') + (opt.current === n ? ' current' : '') }, svg);
+    if (n.leaf) {
+      const col = n.label ? COLORS[n.label] : '#cbd5e1';
+      S('rect', { x: x - NW / 2, y: y - NH / 2, width: NW, height: NH, rx: 14, fill: col, class: 'leaf-rect' }, g);
+      if (n.n) {
+        T(g, x, y - 8, n.label || '?', { class: 'leaf-txt' });
+        const bw = NW - 22; let bx = x - bw / 2;
+        S('rect', { x: bx - 1.5, y: y + 6.5, width: bw + 3, height: 10, rx: 5, fill: '#fff' }, g);
+        SHAPES.forEach(s => {
+          const c = n.counts[s] || 0; if (!c) return;
+          const ww = bw * c / n.n;
+          S('rect', { x: bx, y: y + 8, width: ww, height: 7, fill: COLORS[s] }, g); bx += ww;
+        });
+        const tt = S('title', {}, g); tt.textContent = SHAPES.filter(s => n.counts[s]).map(s => `${s} ${n.counts[s]}개`).join(', ');
+      } else T(g, x, y, n.label || '?', { class: 'leaf-txt' });
+    } else {
+      S('rect', { x: x - NW / 2, y: y - NH / 2, width: NW, height: NH, rx: 10, class: 'q-rect' }, g);
+      T(g, x, y - (n.n != null ? 7 : 0), n.q.short, { class: 'q-txt' });
+      if (n.n != null) T(g, x, y + 12, `데이터 ${n.n}개`, { class: 'n-txt' });
+    }
+  });
+  box.appendChild(svg);
+}
+
+/* ---------- 화면 이동 ---------- */
+const PAGES = ['home', 'explore', 'theory', 'detective', 'train'];
+function go(page) {
+  if (!PAGES.includes(page)) page = 'home';
+  $$('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  $$('#nav button').forEach(b => b.classList.toggle('on', b.dataset.go === page));
+  if (location.hash !== '#' + page) history.replaceState(null, '', '#' + page);
+  window.scrollTo(0, 0);
+  if (page === 'train') renderFree();
+}
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); go(g.dataset.go); } });
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+function setupSubnav(navId, onChange) {
+  const nav = $('#' + navId);
+  nav.addEventListener('click', e => {
+    const b = e.target.closest('[data-sub]'); if (!b) return;
+    $$('[data-sub]', nav).forEach(x => x.classList.toggle('on', x === b));
+    $$(':scope > .sub', nav.parentElement).forEach(s => s.classList.toggle('on', s.id === 'sub-' + b.dataset.sub));
+    if (onChange) onChange(b.dataset.sub);
+  });
+}
+function renderMissions(ul, list, sel) {
+  ul.innerHTML = list.map(m => {
+    const done = (progress[m.key] || 0) > 0;
+    return `<li class="mission${done ? ' done' : ''}${sel === m.id ? ' sel' : ''}" data-id="${m.id}"><span class="chk">${done ? '⭐' : '☆'}</span><span>${m.text}</span></li>`;
+  }).join('');
+}
+
+/* =========================================================
+   ① 사각형 탐험 — 수직 / 평행
+   ========================================================= */
+function lineInfo(P) {
+  const [A, B, C, D] = P, d1 = sub(B, A), d2 = sub(D, C);
+  const perp = dot(d1, d2) === 0, par = cross(d1, d2) === 0;
+  const same = par && cross(sub(C, A), d1) === 0;
+  let X = null;
+  if (!par) { const t = cross(sub(C, A), d2) / cross(d1, d2); X = add(A, mul(d1, t)); }
+  const ang = Math.round(Math.acos(Math.min(1, Math.abs(dot(d1, d2)) / (len(d1) * len(d2)))) * 180 / Math.PI);
+  const dist = par && !same ? Math.abs(cross(sub(C, A), d2)) / len(d2) : null;
+  const inside = X && X[0] >= -0.4 && X[0] <= GW + 0.4 && X[1] >= -0.4 && X[1] <= GH + 0.4;
+  return { A, B, C, D, d1, d2, perp, par, same, X, ang, dist, inside };
+}
+const LINE_COL = ['#2563eb', '#e63973'];
+function drawLines(L, f, kind) {
+  const g = S('g', { 'clip-path': `url(#${L.clip})` }, L.shape);
+  [[f.A, f.B, f.d1, LINE_COL[0], '가'], [f.C, f.D, f.d2, LINE_COL[1], '나']].forEach(([p, q, d, c, name]) => {
+    const n = norm(d);
+    S('line', { x1: p[0] - n[0] * 30, y1: p[1] - n[1] * 30, x2: p[0] + n[0] * 30, y2: p[1] + n[1] * 30, stroke: c, 'stroke-width': 0.075, 'stroke-opacity': 0.55 }, g);
+    S('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], stroke: c, 'stroke-width': 0.12, 'stroke-linecap': 'round' }, g);
+    const m = add(mul(add(p, q), 0.5), mul([-n[1], n[0]], 0.5));
+    T(L.labels, m[0], m[1], '직선 ' + name, { class: 'line-label', fill: c });
+  });
+  if (f.perp && f.X) rightMark(L.marks, f.X, norm(f.d1), norm(f.d2), 0.45, '#15803d', 0.08);
+  if (kind === 'perp' && !f.perp && !f.par && f.inside) {
+    S('circle', { cx: f.X[0], cy: f.X[1], r: 0.13, fill: INK }, L.marks);
+    T(L.labels, f.X[0] + 0.25, f.X[1] - 0.35, f.ang + '°', { class: 'dist-label', fill: INK });
+  }
+  if (kind === 'par' && !f.par && f.inside) T(L.labels, f.X[0], f.X[1], '★', { class: 'line-label', fill: '#c2410c' });
+  if (kind === 'par' && f.par && !f.same) {
+    [f.A, f.B].forEach((p, i) => {
+      const F = add(f.C, mul(f.d2, dot(sub(p, f.C), f.d2) / len2(f.d2)));
+      S('line', { x1: p[0], y1: p[1], x2: F[0], y2: F[1], stroke: '#ea580c', 'stroke-width': 0.07, 'stroke-dasharray': '0.18 0.12' }, L.marks);
+      rightMark(L.marks, F, norm(sub(p, F)), norm(f.d2), 0.3, '#ea580c');
+      if (i === 0) { const m = mul(add(p, F), 0.5); T(L.labels, m[0] + 0.2, m[1], fmtDist(f.dist) + '칸', { class: 'dist-label' }); }
+    });
+  }
+}
+const fmtDist = d => (Math.abs(d - Math.round(d)) < 1e-9 ? String(Math.round(d)) : '약 ' + d.toFixed(1));
+
+const PERP_M = [
+  { id: 'p1', key: 'perp1', text: '직선 가와 직선 나가 서로 <b>수직</b>이 되도록 만들기' },
+  { id: 'p2', key: 'perp2', text: '두 직선 모두 <b>비스듬히</b> 기울인 채로 수직 만들기' }
+];
+const PAR_M = [
+  { id: 'q1', key: 'par1', text: '두 직선이 서로 <b>평행</b>하도록 만들기' },
+  { id: 'q2', key: 'par2', text: '<b>비스듬한</b> 평행선 만들기' },
+  { id: 'q3', key: 'par3', text: '평행선 사이의 거리가 <b>3칸</b>이 되도록 만들기' }
+];
+function makeLineLesson(kind) {
+  const svg = $('#' + kind + 'Board'), L = initBoard(svg);
+  const st = { pts: kind === 'perp' ? [[1, 6], [5, 2], [3, 1], [8, 5]] : [[1, 2], [6, 1], [2, 6], [8, 4]] };
+  const ul = $('#' + kind + 'Missions'), list = kind === 'perp' ? PERP_M : PAR_M;
+  function status(f) {
+    let html, cls = '';
+    if (kind === 'perp') {
+      if (f.perp) { cls = 'good'; html = '✅ 두 직선이 만나서 이루는 각이 <b>직각</b>이에요! 직선 가와 직선 나는 서로 <b>수직</b>이에요.<br>직선 가는 직선 나에 대한 <b>수선</b>이고, 직선 나도 직선 가에 대한 수선이에요.'; }
+      else if (f.par) html = '두 직선이 서로 만나지 않아요. 수직이 되려면 두 직선이 <b>만나서 직각</b>을 이뤄야 해요.';
+      else html = `두 직선이 만나서 이루는 각은 약 <b>${f.ang}°</b>예요. 90°(직각)가 되도록 점을 옮겨 보세요.` + (f.inside ? '' : ' (두 직선은 판 바깥에서 만나요.)');
+    } else {
+      if (f.same) html = '두 직선이 겹쳐서 하나가 되었어요. 조금 떨어뜨려 보세요.';
+      else if (f.par) { cls = 'good'; html = `✅ 두 직선을 아무리 길게 늘여도 만나지 않아요! 직선 가와 직선 나는 <b>평행</b>하고, 이 두 직선을 <b>평행선</b>이라고 해요.<br>주황 점선은 평행선 사이에 그은 <b>수선</b>이에요. 어디서 재어도 길이가 같아요 → 평행선 사이의 거리: <b>${fmtDist(f.dist)}칸</b>`; }
+      else html = `두 직선을 늘이면 ${f.inside ? '<b>★</b> 자리에서' : '판 바깥 어딘가에서'} 만나요. 만나지 않게 하려면 두 직선이 기울어진 정도를 똑같이 맞춰 보세요.`;
+    }
+    setMsg('#' + kind + 'Status', html, cls);
+  }
+  function render() { clearLayers(L); const f = lineInfo(st.pts); drawLines(L, f, kind); drawHandles(L, st.pts, [LINE_COL[0], LINE_COL[0], LINE_COL[1], LINE_COL[1]]); status(f); }
+  function check() {
+    const f = lineInfo(st.pts), tilt = !isAxis(f.d1) && !isAxis(f.d2);
+    let won = false;
+    if (kind === 'perp') { if (f.perp) won = award('perp1', 1) || won; if (f.perp && tilt) won = award('perp2', 1) || won; }
+    else if (f.par && !f.same) {
+      won = award('par1', 1) || won;
+      if (tilt) won = award('par2', 1) || won;
+      if (Math.abs(f.dist - 3) < 1e-9) won = award('par3', 1) || won;
+    }
+    if (won) confetti();
+    renderMissions(ul, list);
+  }
+  makeDraggable(svg, () => st.pts, (i, p) => { st.pts[i] = p; render(); }, check);
+  render(); renderMissions(ul, list);
+}
+
+/* =========================================================
+   ① 사각형 탐험 — 사각형 실험실
+   ========================================================= */
+const INFO = {
+  '사다리꼴': { def: '평행한 변이 한 쌍이라도 있는 사각형', props: ['마주 보는 한 쌍의 변이 서로 평행해요.', '평행한 변이 두 쌍이어도 사다리꼴이라고 할 수 있어요.'] },
+  '평행사변형': { def: '마주 보는 두 쌍의 변이 서로 평행한 사각형', props: ['마주 보는 두 변의 길이가 같아요.', '마주 보는 두 각의 크기가 같아요.', '이웃한 두 각의 크기의 합은 180°예요.'] },
+  '마름모': { def: '네 변의 길이가 모두 같은 사각형', props: ['마주 보는 두 쌍의 변이 서로 평행해요.', '마주 보는 두 각의 크기가 같아요.', '마주 보는 꼭짓점끼리 이은 두 선분은 서로 수직으로 만나고, 서로를 똑같이 둘로 나눠요.'] },
+  '직사각형': { def: '네 각이 모두 직각인 사각형', props: ['마주 보는 두 변의 길이가 같아요.', '마주 보는 두 쌍의 변이 서로 평행해요.'] },
+  '정사각형': { def: '네 변의 길이가 모두 같고, 네 각이 모두 직각인 사각형', props: ['직사각형이면서 마름모예요.', '마주 보는 두 쌍의 변이 서로 평행해요.'] },
+  '일반 사각형': { def: '평행한 변이 한 쌍도 없는 사각형', props: ['이 자료에서는 위 다섯 가지에 들지 않는 사각형을 이렇게 불러요.'] }
+};
+const LAB_M = [
+  { id: '사다리꼴', key: 'lab-사다리꼴', text: '<b>사다리꼴</b> 만들기' },
+  { id: '평행사변형', key: 'lab-평행사변형', text: '<b>평행사변형</b> 만들기' },
+  { id: '마름모', key: 'lab-마름모', text: '<b>마름모</b> 만들기' },
+  { id: '직사각형', key: 'lab-직사각형', text: '<b>직사각형</b> 만들기' },
+  { id: '정사각형', key: 'lab-정사각형', text: '<b>정사각형</b> 만들기' },
+  { id: 'tilt', key: 'lab-tilt', text: '🔥 도전: <b>기울어진 정사각형</b> 만들기' },
+  { id: 'rtrap', key: 'lab-rtrap', text: '🔥 도전: 직각이 있는 <b>사다리꼴</b> 만들기' }
+];
+const LAB_START = [[2, 2], [7, 1], [8, 6], [3, 5]];
+const lab = { pts: LAB_START.map(p => p.slice()), sel: '사다리꼴', marks: Object.assign({}, ALLMARKS) };
+let labL;
+function labOk(id, a, P) {
+  if (!a.ok) return false;
+  if (id === 'tilt') return a.type === '정사각형' && isTiltedQuad(P);
+  if (id === 'rtrap') return a.type === '사다리꼴' && a.ra >= 1;
+  return a.type === id;
+}
+function measureHTML(a) {
+  if (!a.ok) return `<div class="warn">⚠️ ${a.msg} 점을 옮겨 올바른 사각형을 만들어 주세요.</div>`;
+  const vn = i => VLABEL[i % 4], side = i => `변 ${vn(i)}${vn(i + 1)}`;
+  const parTxt = a.pp ? [0, 1].filter(k => a.par[k]).map(k => `${side(k)} ∥ ${side(k + 2)}`).join(', ') : '평행한 변이 없어요';
+  const rightTxt = a.ra ? '꼭짓점 ' + a.right.map((r, i) => (r ? vn(i) : null)).filter(Boolean).join(', ') : '직각이 없어요';
+  const opp = a.L[0] === a.L[2] && a.L[1] === a.L[3];
+  const lenB = a.eq ? '네 변 모두 같음' : opp ? '마주 보는 변끼리 같음' : new Set(a.L).size < 4 ? '같은 변이 일부 있음' : '모두 다름';
+  const names = allNames(a), others = names.filter(n => n !== '사각형' && n !== a.type);
+  return `<div class="m-grid">
+    <div><span>평행한 변</span><b>${a.pp}쌍</b><small>${parTxt}</small></div>
+    <div><span>직각</span><b>${a.ra}개</b><small>${rightTxt}</small></div>
+    <div><span>변의 길이</span><b>${lenB}</b><small>같은 길이는 같은 개수의 ∥ 표시</small></div>
+    <div><span>각의 크기</span><b>합 ${a.angles.reduce((s, x) => s + x, 0)}°</b><small>${a.angles.map((d, i) => `${vn(i)} ${d}°`).join(' · ')}</small></div>
+  </div>
+  <div class="names"><span>이 사각형의 이름</span>${names.map(n => `<em class="${n === a.type ? 'best' : ''}" style="--c:${COLORS[n] || '#94a3b8'}">${n}</em>`).join('')}</div>
+  <p class="names-tip">가장 정확한 이름은 <b style="color:${COLORS[a.type]}">${a.type}</b>${others.length ? `이고, ${others.join(', ')}이기도 해요.` : (josa(a.type, '이에요', '예요').slice(a.type.length))}</p>`;
+}
+function renderLabInfo() {
+  const t = lab.sel === 'tilt' ? '정사각형' : lab.sel === 'rtrap' ? '사다리꼴' : lab.sel;
+  const info = INFO[t];
+  const extra = lab.sel === 'tilt' ? '<p class="tip">힌트: 한 변을 ‘오른쪽 2칸·아래 1칸’으로 그렸다면 다음 변은 ‘왼쪽 1칸·아래 2칸’!</p>'
+    : lab.sel === 'rtrap' ? '<p class="tip">힌트: 평행한 두 변에 수직인 변이 하나 있으면 직각이 생겨요.</p>' : '';
+  const box = $('#labInfo'); box.style.setProperty('--c', COLORS[t]);
+  box.innerHTML = `<h4>${t}</h4><b>${info.def}</b><ul>${info.props.map(p => `<li>${p}</li>`).join('')}</ul>${extra}`;
+}
+function renderLab() {
+  clearLayers(labL);
+  const a = analyze(lab.pts);
+  drawQuad(labL, lab.pts, a, { marks: Object.assign({}, lab.marks, { vlabel: 1 }) });
+  drawHandles(labL, lab.pts);
+  $('#labMeasure').innerHTML = measureHTML(a);
+}
+function labCheck() {
+  const a = analyze(lab.pts);
+  const m = LAB_M.find(x => x.id === lab.sel);
+  if (labOk(lab.sel, a, lab.pts)) {
+    if (award(m.key, 1)) confetti();
+    toast(`🎉 미션 성공! ${m.text.replace(/<[^>]+>/g, '')}`);
+    renderMissions($('#labMissions'), LAB_M, lab.sel);
+  }
+}
+function judgeLabel(lbl, a) {
+  if (lbl === a.type) return null;
+  if (allNames(a).includes(lbl)) return `맞아요, ${lbl}이기도 해요! 그런데 네모봇에게는 <b>가장 정확한 이름</b>을 알려 주기로 했어요. 다시 골라 볼까요?`;
+  return `음… 다시 살펴볼까요? 측정해 보니 <b>평행한 변 ${a.pp}쌍, 직각 ${a.ra}개, 네 변의 길이 ${a.eq ? '모두 같음' : '모두 같지는 않음'}</b>이에요.`;
+}
+const lblButtons = () => SHAPES.map(s => `<button class="lbl" style="--c:${COLORS[s]}" data-l="${s}">${s}</button>`).join('');
+const pathHTML = (path, f) => path.filter(n => !n.leaf).map(n => `<li>${n.q.text} → <b>${n.q.test(f) ? '예' : '아니오'}</b></li>`).join('');
+function initLab() {
+  labL = initBoard($('#labBoard'));
+  makeDraggable($('#labBoard'), () => lab.pts, (i, p) => { lab.pts[i] = p; renderLab(); }, labCheck);
+  $('#labMissions').addEventListener('click', e => {
+    const li = e.target.closest('[data-id]'); if (!li) return;
+    lab.sel = li.dataset.id; renderMissions($('#labMissions'), LAB_M, lab.sel); renderLabInfo();
+    labCheck();
+  });
+  $('#labToggles').addEventListener('change', e => { lab.marks[e.target.dataset.m] = e.target.checked ? 1 : 0; renderLab(); });
+  $('#labReset').onclick = () => { lab.pts = LAB_START.map(p => p.slice()); renderLab(); };
+  $('#labRandom').onclick = () => { lab.pts = genShape(pick(SHAPES)); renderLab(); };
+  $('#labAsk').onclick = () => {
+    const a = analyze(lab.pts);
+    if (!a.ok) return toast('먼저 올바른 사각형을 만들어 주세요.');
+    const tree = freeTree();
+    if (!tree) return showModal('🤖 네모봇', `<div class="ask-res">${robot('think', 70)}<p>아직 아무것도 배우지 못했어요…<br><b>④ AI 조수 훈련소</b>에서 사각형을 가르쳐 주세요!</p></div>`);
+    const r = predict(tree, a.feat), ok = r.label === a.type;
+    showModal('🤖 네모봇의 대답', `<div class="ask-res">${robot(ok ? 'happy' : 'think', 70)}<p>제 생각에는 <b style="color:${COLORS[r.label]}">${josa(r.label, '이에요', '예요')}</b>!</p></div>
+      <p class="tip">네모봇은 이렇게 생각했어요.</p><ol class="path">${pathHTML(r.path, a.feat)}</ol>
+      <p>${ok ? '정답이에요! 👏' : `앗, 가장 정확한 이름은 <b>${josa(a.type, '이에요', '예요')}</b>. 이런 사각형을 훈련소에서 더 가르쳐 주세요.`}</p>`);
+  };
+  $('#labSend').onclick = () => {
+    const a = analyze(lab.pts);
+    if (!a.ok) return toast('먼저 올바른 사각형을 만들어 주세요.');
+    const P = lab.pts.map(p => p.slice());
+    showModal('📥 훈련소로 보내기', `<p>이 사각형의 <b>가장 정확한 이름</b>을 골라 이름표를 붙여 주세요.</p><div class="lbl-btns">${lblButtons()}</div><div class="status" id="sendMsg"></div>`, body => {
+      body.addEventListener('click', e => {
+        const b = e.target.closest('[data-l]'); if (!b) return;
+        const m = $('#helperOn').checked ? judgeLabel(b.dataset.l, a) : null;
+        if (m) { setMsg('#sendMsg', m, 'bad'); return; }
+        addTrainRow(P, b.dataset.l, a.type); closeModal();
+        toast(`훈련소 데이터에 ‘${b.dataset.l}’ 이름표로 추가했어요!`);
+      });
+    });
+  };
+  renderMissions($('#labMissions'), LAB_M, lab.sel); renderLabInfo(); renderLab();
+}
+
+/* =========================================================
+   ② 의사결정트리 원리
+   ========================================================= */
+let slideI = 0, SAMPLE = [], sampleTree = null, demoTimer = null;
+function newSample() {
+  const comp = { '정사각형': 2, '직사각형': 2, '마름모': 2, '평행사변형': 2, '사다리꼴': 3, '일반 사각형': 3 };
+  SAMPLE = shuffle(Object.entries(comp).flatMap(([t, n]) => Array.from({ length: n }, () => {
+    const P = genShape(t); return { P, label: t, f: analyze(P).feat };
+  })));
+  sampleTree = buildTree(SAMPLE);
+  const pool = $('#splitPool'); pool.innerHTML = '';
+  SAMPLE.forEach(r => pool.appendChild(chipShape(r)));
+  $('#splitResult').innerHTML = ''; $('#splitRank').innerHTML = '';
+  $$('#splitBtns button').forEach(b => b.classList.remove('on'));
+  drawTree($('#learnTree'), sampleTree);
+  $('#predShape').innerHTML = ''; $('#predSteps').innerHTML = '';
+}
+function chipShape(r) {
+  const d = document.createElement('div'); d.className = 'chipshape';
+  const m = miniBoard(r.P, { color: COLORS[r.label], solid: true, grid: false }); m.style.width = '100%'; m.style.height = 'auto';
+  d.appendChild(m); d.insertAdjacentHTML('beforeend', `<span style="color:${COLORS[r.label]}">${r.label}</span>`);
+  return d;
+}
+const clean = rows => (rows.length ? 1 - giniOf(countLabels(rows), rows.length) : 1);
+function splitBy(q) { return [SAMPLE.filter(r => q.test(r.f)), SAMPLE.filter(r => !q.test(r.f))]; }
+const weighted = q => { const [y, n] = splitBy(q); return (y.length * clean(y) + n.length * clean(n)) / SAMPLE.length; };
+function showSplit(q) {
+  const [y, n] = splitBy(q);
+  const box = (rows, cls, title) => {
+    const c = Math.round(clean(rows) * 100);
+    return `<div class="split-box ${cls}"><h5>${title} (${rows.length}개)</h5><div class="pool" data-rows="${cls}"></div><small>깔끔도 ${rows.length ? c : '-'}점</small><div class="meter"><i style="width:${rows.length ? c : 0}%"></i></div></div>`;
+  };
+  const res = $('#splitResult');
+  res.innerHTML = box(y, 'yes', '예') + box(n, 'no', '아니오') +
+    `<p style="grid-column:1/-1;margin:4px 0 0"><b>‘${q.text}’</b> 질문의 전체 깔끔도: <b>${Math.round(weighted(q) * 100)}점</b> ${y.length && n.length ? '' : '— 데이터가 한쪽으로만 가서 나누지 못했어요!'}</p>`;
+  y.forEach(r => $('[data-rows="yes"]', res).appendChild(chipShape(r)));
+  n.forEach(r => $('[data-rows="no"]', res).appendChild(chipShape(r)));
+}
+function initTheory() {
+  const slides = $$('#page-theory .slide');
+  $('#slideDots').innerHTML = slides.map((_, i) => `<button aria-label="${i + 1}번 카드" data-i="${i}"></button>`).join('');
+  const show = i => {
+    slideI = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('on', k === slideI));
+    $$('#slideDots button').forEach((b, k) => b.classList.toggle('on', k === slideI));
+    $('#slideNo').textContent = `${slideI + 1} / ${slides.length}`;
+    $('#slidePrev').disabled = slideI === 0;
+    $('#slideNext').textContent = slideI === slides.length - 1 ? '③ 스무고개 탐정으로 →' : '다음 →';
+  };
+  $('#slidePrev').onclick = () => show(slideI - 1);
+  $('#slideNext').onclick = () => { if (slideI === slides.length - 1) go('detective'); else { show(slideI + 1); $('#page-theory .slides').scrollIntoView({ block: 'start' }); } };
+  $('#slideDots').onclick = e => { const b = e.target.closest('[data-i]'); if (b) show(+b.dataset.i); };
+  show(0);
+  // 1. 데이터 그림
+  const fd = $('#flowData');
+  [['정사각형', [[0, 0], [2, 0], [2, 2], [0, 2]]], ['마름모', [[0, 1], [2, 0], [4, 1], [2, 2]]], ['사다리꼴', [[0, 2], [1, 0], [3, 0], [4, 2]]]].forEach(([t, P]) => {
+    const w = document.createElement('div'); w.className = 'chipshape'; w.style.width = '52px';
+    const m = miniBoard(P, { color: COLORS[t], solid: true, grid: false }); m.style.width = '100%';
+    w.appendChild(m); w.insertAdjacentHTML('beforeend', `<span style="color:${COLORS[t]}">${t}</span>`); fd.appendChild(w);
+  });
+  // 2. 정사각형 그림
+  const s2 = miniBoard([[2, 0], [4, 2], [2, 4], [0, 2]], { color: COLORS['정사각형'], marks: { right: 1, equal: 1, parallel: 1 } });
+  s2.style.width = '100%'; s2.style.maxWidth = '260px'; s2.style.margin = '0 auto'; $('#slide2Shape').appendChild(s2);
+  // 3. 트리 구조
+  drawTree($('#anatomyTree'), TEACHER);
+  // 4. 질문 나누기
+  $('#splitBtns').innerHTML = QUESTIONS.map(q => `<button data-q="${q.id}">${q.text}</button>`).join('');
+  $('#splitBtns').onclick = e => {
+    const b = e.target.closest('[data-q]'); if (!b) return;
+    $$('#splitBtns button').forEach(x => x.classList.toggle('on', x === b));
+    showSplit(QUESTIONS.find(q => q.id === b.dataset.q));
+  };
+  $('#splitBest').onclick = () => {
+    const ranked = QUESTIONS.map((q, i) => ({ q, s: weighted(q), i })).sort((a, b) => b.s - a.s || a.i - b.i);
+    $('#splitRank').innerHTML = ranked.map((r, k) => `<li class="${k === 0 ? 'top' : ''}"><span>${k === 0 ? '👑' : k + 1}</span><span>${r.q.text}</span><div class="meter"><i style="width:${Math.round(r.s * 100)}%"></i></div><span>${Math.round(r.s * 100)}점</span></li>`).join('') +
+      `<li style="display:block;background:none;font-weight:600">👑 네모봇은 <b>‘${ranked[0].q.text}’</b>를 첫 질문(뿌리)으로 골라요. 점수가 같으면 목록에서 먼저 나온 질문을 골라요. 나뉜 묶음마다 이 과정을 되풀이하면 트리가 완성돼요 → 다음 카드!</li>`;
+    showSplit(ranked[0].q);
+    $$('#splitBtns button').forEach(x => x.classList.toggle('on', x.dataset.q === ranked[0].q.id));
+  };
+  $('#splitNew').onclick = newSample;
+  newSample();
+  // 5. 예측 시연
+  $('#predBtn').onclick = () => {
+    clearInterval(demoTimer);
+    const t = pick(SHAPES), P = genShape(t), a = analyze(P), r = predict(sampleTree, a.feat);
+    const box = $('#predShape'); box.innerHTML = '';
+    const m = miniBoard(P, { color: '#475569', marks: { right: 1, equal: 1, parallel: 1 } }); m.style.width = '100%'; box.appendChild(m);
+    const steps = $('#predSteps'); steps.innerHTML = '';
+    let k = 1;
+    const step = () => {
+      const n = r.path[k - 1];
+      drawTree($('#learnTree'), sampleTree, { path: r.path.slice(0, k), current: n.leaf ? null : n });
+      if (n.leaf) {
+        steps.insertAdjacentHTML('beforeend', `<li class="res">→ 네모봇의 예측: <span style="color:${COLORS[n.label]}">${n.label}</span> ${n.label === t ? '✓ 정답!' : `✗ (정답: ${t})`}</li>`);
+        clearInterval(demoTimer);
+      } else steps.insertAdjacentHTML('beforeend', `<li>${n.q.text} → <b>${n.q.test(a.feat) ? '예' : '아니오'}</b></li>`);
+      k++;
+    };
+    step(); demoTimer = setInterval(step, 800);
+  };
+  initQuiz();
+}
+const QUIZ = [
+  { q: '사각형 그림과 이름표(정답)를 함께 보여 주며 AI를 가르치는 방법은?', opts: ['지도학습', '자유학습', '암기학습'], a: 0, ex: '정답(레이블)이 붙은 데이터로 배우는 방법을 지도학습이라고 해요.' },
+  { q: '의사결정트리에서 결과(사각형 이름)가 적힌 맨 끝을 무엇이라고 할까요?', opts: ['뿌리 노드', '가지', '잎 노드'], a: 2, ex: '더 이상 질문하지 않는 트리의 끝을 잎 노드라고 해요.' },
+  { q: '네모봇은 첫 질문으로 어떤 질문을 고를까요?', opts: ['가장 어려운 질문', '데이터를 가장 깔끔하게 나누는 질문', '아무 질문이나'], a: 1, ex: '모든 질문을 비교해서 같은 종류끼리 가장 잘 모이도록 나누는 질문을 골라요.' },
+  { q: '네모봇이 정사각형을 자꾸 마름모라고 해요. 가장 먼저 확인할 것은?', opts: ['학습 데이터의 이름표가 맞는지', '컴퓨터 화면의 밝기', '네모봇의 색깔'], a: 0, ex: 'AI는 데이터로 배우기 때문에, 이름표가 틀리면 AI도 틀리게 배워요.' }
+];
+function initQuiz() {
+  const box = $('#quiz'); const ans = new Array(QUIZ.length).fill(null);
+  const render = () => {
+    box.innerHTML = QUIZ.map((q, i) => `<div class="quiz-q"><p>Q${i + 1}. ${q.q}</p><div class="quiz-opts">${q.opts.map((o, j) => {
+      let c = ''; if (ans[i] !== null) { if (j === q.a) c = 'right'; else if (j === ans[i]) c = 'wrong'; }
+      return `<button data-i="${i}" data-j="${j}" class="${c}" ${ans[i] !== null ? 'disabled' : ''}>${o}</button>`;
+    }).join('')}</div>${ans[i] !== null ? `<p class="quiz-ex">${ans[i] === q.a ? '⭕ 정답!' : '❌ 아쉬워요.'} ${q.ex}</p>` : ''}</div>`).join('');
+    if (ans.every(x => x !== null)) {
+      const c = ans.filter((x, i) => x === QUIZ[i].a).length, st = Math.max(0, c - 1);
+      setMsg('#quizRes', `${QUIZ.length}문제 중 <b>${c}개</b> 정답! ${starStr(st)} <button class="btn ghost sm" id="quizRetry">다시 풀기</button>`, c >= 3 ? 'good' : '');
+      if (st && award('theory-quiz', st)) confetti();
+      $('#quizRetry').onclick = () => { ans.fill(null); $('#quizRes').innerHTML = ''; $('#quizRes').className = 'status'; render(); };
+    }
+  };
+  box.onclick = e => { const b = e.target.closest('[data-j]'); if (!b || b.disabled) return; ans[+b.dataset.i] = +b.dataset.j; render(); };
+  render();
+}
+
+/* =========================================================
+   ③ 스무고개 탐정
+   ========================================================= */
+const det = { on: false };
+let detL;
+function explainQ(q, a) {
+  if (q.f === 'pp') return `평행한 변이 ${a.pp}쌍이에요.`;
+  if (q.f === 'ra') return `직각이 ${a.ra}개예요.`;
+  return a.eq ? '네 변의 길이가 모두 같아요.' : '네 변의 길이가 모두 같지는 않아요.';
+}
+function detIntro(result) {
+  const best = progress.detective || 0;
+  $('#detIntro').innerHTML = result ? `
+    ${robot(result.stars ? 'happy' : 'sad', 90)}
+    <h3>${result.over ? '하트를 모두 잃었어요!' : '탐정 수사 완료!'}</h3>
+    <div class="big-score">${result.score}점</div>
+    <p>질문 정답률 ${result.ok}/${result.total} (${Math.round(result.acc * 100)}%)</p>
+    <div class="stars-big">${starStr(result.stars)}</div>
+    <p class="tip">${result.stars === 3 ? '완벽한 탐정이에요!' : '정답률 90% 이상이면 ⭐3, 70% 이상이면 ⭐2를 받아요.'}</p>
+    <p><button class="btn big" id="detGo">다시 도전하기</button></p>` : `
+    ${robot('happy', 90)}
+    <h3>스무고개 탐정 출동!</h3>
+    <ul>
+      <li>사각형이 하나씩 나타나요. 오른쪽 <b>분류 트리</b>의 질문에 <b>예 / 아니오</b>로 답하세요.</li>
+      <li>맞히면 <b>+10점</b>, 연속으로 맞히면 <b>콤보 보너스</b>!</li>
+      <li>틀리면 하트 ❤️가 줄어요. 하트 3개를 모두 잃으면 끝!</li>
+      <li>헷갈리면 <b>🔍 돋보기</b>로 직각·평행·길이 표시를 볼 수 있어요(−5점).</li>
+      <li>사각형 10개를 모두 밝혀내면 수사 완료!</li>
+    </ul>
+    <p>최고 기록: ${starStr(best)}</p>
+    <p><button class="btn big" id="detGo">수사 시작 🔍</button></p>`;
+  $('#detIntro').hidden = false; $('#detGame').hidden = true;
+  $('#detGo').onclick = detStart;
+}
+function detStart() {
+  Object.assign(det, { on: true, round: 0, score: 0, hearts: 3, combo: 0, ok: 0, total: 0, queue: shuffle(SHAPES.concat(SHAPES)).slice(0, 10) });
+  $('#detIntro').hidden = true; $('#detGame').hidden = false;
+  detNext();
+}
+function detNext() {
+  if (det.round >= 10) return detEnd(false);
+  const t = det.queue[det.round];
+  det.P = genShape(t, { tilt: t === '정사각형' && Math.random() < 0.5 });
+  det.a = analyze(det.P); det.node = TEACHER; det.path = [TEACHER]; det.hint = false; det.lock = false; det.done = false;
+  setMsg('#detMsg', `새 사각형 등장! ${det.round + 1}번째 수사를 시작해요.`);
+  detRender();
+}
+function detRender() {
+  clearLayers(detL);
+  drawQuad(detL, det.P, det.a, { color: det.done ? COLORS[det.a.type] : '#4361ee', marks: det.hint ? ALLMARKS : {} });
+  $('#detHud').innerHTML = `<div>🔎 ${Math.min(det.round + 1, 10)} / 10</div><div>🏆 ${det.score}점</div><div>${'❤️'.repeat(det.hearts)}${'🤍'.repeat(3 - det.hearts)}</div><div class="combo">🔥 콤보 ${det.combo}</div>`;
+  $('#detQ').innerHTML = det.node.leaf ? `🎉 이 사각형은 <span style="color:${COLORS[det.node.label]}">${det.node.label}</span>!` : `<span class="qbadge">질문</span>${det.node.q.text}`;
+  ['#detYes', '#detNo', '#detHint'].forEach(s => { $(s).disabled = det.lock; });
+  $('#detHint').disabled = det.lock || det.hint;
+  drawTree($('#detTree'), TEACHER, { path: det.path, current: det.node.leaf ? null : det.node });
+}
+function detAnswer(yes) {
+  if (!det.on || det.lock || det.node.leaf) return;
+  const q = det.node.q, truth = q.test(det.a.feat);
+  det.total++;
+  if (yes === truth) {
+    det.ok++; det.combo++;
+    const gain = 10 + (det.combo - 1) * 2; det.score += gain;
+    setMsg('#detMsg', `⭕ 정답! ${explainQ(q, det.a)} +${gain}점${det.combo > 1 ? ` (🔥 ${det.combo}콤보)` : ''}`, 'good');
+  } else {
+    det.hearts--; det.combo = 0; det.hint = true;
+    setMsg('#detMsg', `❌ 앗! ${explainQ(q, det.a)} 그래서 답은 ‘${truth ? '예' : '아니오'}’예요. 표시를 잘 살펴보세요.`, 'bad');
+  }
+  det.node = truth ? det.node.yes : det.node.no; det.path.push(det.node);
+  if (det.node.leaf || det.hearts <= 0) {
+    det.lock = true;
+    if (det.node.leaf) det.done = true;
+    detRender();
+    if (det.hearts <= 0) return setTimeout(() => detEnd(true), 1600);
+    setTimeout(() => { det.round++; detNext(); }, 1700);
+  } else detRender();
+}
+function detEnd(over) {
+  det.on = false;
+  const acc = det.total ? det.ok / det.total : 0;
+  const stars = over ? 0 : acc >= 0.9 ? 3 : acc >= 0.7 ? 2 : 1;
+  if (stars && award('detective', stars)) confetti();
+  detIntro({ over, score: det.score, ok: det.ok, total: det.total, acc, stars });
+}
+function initDetective() {
+  detL = initBoard($('#detBoard'));
+  $('#detYes').onclick = () => detAnswer(true);
+  $('#detNo').onclick = () => detAnswer(false);
+  $('#detHint').onclick = () => { if (det.lock || det.hint) return; det.hint = true; det.score = Math.max(0, det.score - 5); setMsg('#detMsg', '🔍 돋보기로 직각(⌐), 평행(>), 같은 길이(∥) 표시를 보여 줄게요.'); detRender(); };
+  detIntro();
+}
+
+/* =========================================================
+   ④ AI 조수 훈련소
+   ========================================================= */
+let trainRows = store.get('train', []);
+let trainCur = null, trainQueue = [], trainL, autoMarks = false, freeLastTree = null;
+let TEST = [];
+const newTestSet = () => shuffle(SHAPES.flatMap(t => [{ P: genShape(t), truth: t }, { P: genShape(t, { tilt: t === '정사각형' }), truth: t }]));
+const rowsFor = rows => rows.filter(r => r.on !== false).map(r => ({ f: analyze(r.P).feat, label: r.label }));
+function freeTree() { const R = rowsFor(trainRows); return R.length ? buildTree(R) : null; }
+const saveTrain = () => store.set('train', trainRows);
+function addTrainRow(P, label, truth) { trainRows.push({ P, label, truth, on: true }); saveTrain(); renderFree(); }
+
+function nextTrainShape() {
+  if (!trainQueue.length) trainQueue = shuffle(SHAPES);
+  const t = trainQueue.pop();
+  trainCur = { P: genShape(t, { tilt: t === '정사각형' && Math.random() < 0.4 }), truth: t };
+  if (autoMarks) { $('#trainMarks').checked = false; autoMarks = false; }
+  renderTrainBoard();
+}
+function renderTrainBoard() {
+  clearLayers(trainL);
+  drawQuad(trainL, trainCur.P, analyze(trainCur.P), { color: '#4361ee', marks: $('#trainMarks').checked ? ALLMARKS : {} });
+}
+function labelTrain(lbl) {
+  const a = analyze(trainCur.P);
+  if ($('#helperOn').checked) {
+    const m = judgeLabel(lbl, a);
+    if (m) { setMsg('#trainMsg', m, 'bad'); if (!$('#trainMarks').checked) { $('#trainMarks').checked = true; autoMarks = true; } renderTrainBoard(); setBot('think'); return; }
+  }
+  trainRows.push({ P: trainCur.P, label: lbl, truth: a.type, on: true }); saveTrain();
+  setMsg('#trainMsg', `네모봇이 <b style="color:${COLORS[lbl]}">${lbl}</b> 데이터를 배웠어요! 트리가 어떻게 바뀌었는지 확인해 보세요.`, 'good');
+  nextTrainShape(); renderFree(); setBot('happy');
+}
+function setBot(mood) { $('#botFace').innerHTML = robot(mood, 64); }
+function renderFree() {
+  if (!trainL) return;
+  const on = trainRows.filter(r => r.on !== false).length;
+  const lv = Math.min(5, 1 + Math.floor(on / 6));
+  $('#botLv').textContent = `네모봇 Lv.${lv}`;
+  $('#lvFill').style.width = (lv === 5 ? 100 : (on % 6) / 6 * 100) + '%';
+  const kinds = new Set(trainRows.filter(r => r.on !== false).map(r => r.label)).size;
+  $('#botSay').textContent = on === 0 ? '안녕! 나는 네모봇이야. 사각형 이름을 가르쳐 줘!'
+    : kinds < 6 ? `지금까지 ${on}개를 배웠어. 아직 ${6 - kinds}종류의 사각형은 한 번도 못 봤어!`
+    : on < 12 ? `${on}개 배웠어! 여섯 종류를 모두 봤어. 조금 더 가르쳐 줄래?` : `${on}개나 배웠어! 이제 시험 볼 준비가 됐어!`;
+  $('#dataCount').textContent = `${on}개 사용 / 전체 ${trainRows.length}개`;
+  freeLastTree = freeTree();
+  drawTree($('#trainTree'), freeLastTree, { empty: '이름표를 붙인 데이터가 생기면 네모봇이 트리를 만들어요.' });
+  renderTable($('#dataTable'), trainRows, {
+    toggle: true, del: true, reverse: true,
+    onLabel: (i, v) => { trainRows[i].label = v; saveTrain(); renderFree(); },
+    onToggle: (i, v) => { trainRows[i].on = v; saveTrain(); renderFree(); },
+    onDel: i => { trainRows.splice(i, 1); saveTrain(); renderFree(); }
+  });
+}
+function renderTable(table, rows, opt) {
+  const order = rows.map((_, i) => i); if (opt.reverse) order.reverse();
+  table.innerHTML = `<thead><tr><th>#</th><th>사각형</th><th>평행한 변</th><th>직각</th><th>네 변 같음</th><th>이름표(정답)</th>${opt.toggle ? '<th>사용</th>' : ''}${opt.del ? '<th></th>' : ''}</tr></thead><tbody>` +
+    (rows.length ? order.map(i => {
+      const r = rows[i], f = analyze(r.P).feat;
+      return `<tr class="${r.on === false ? 'off' : ''}"><td>${i + 1}</td><td data-mini="${i}"></td><td>${f.pp}쌍</td><td>${f.ra}개</td><td>${f.eq ? '예' : '아니오'}</td>
+        <td><select class="lbl-sel" data-i="${i}" style="--c:${COLORS[r.label]}" aria-label="이름표">${SHAPES.map(s => `<option ${s === r.label ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+        ${opt.toggle ? `<td><input type="checkbox" data-t="${i}" ${r.on === false ? '' : 'checked'} aria-label="학습에 사용"></td>` : ''}
+        ${opt.del ? `<td><button class="del" data-d="${i}" aria-label="삭제">✕</button></td>` : ''}</tr>`;
+    }).join('') : `<tr><td colspan="8" style="padding:24px;color:var(--muted)">아직 데이터가 없어요.</td></tr>`) + '</tbody>';
+  $$('[data-mini]', table).forEach(td => { const i = +td.dataset.mini; td.appendChild(miniBoard(rows[i].P, { color: COLORS[rows[i].label], marks: opt.marks })); });
+  table.onchange = e => {
+    if (e.target.dataset.i != null) opt.onLabel(+e.target.dataset.i, e.target.value);
+    else if (e.target.dataset.t != null) opt.onToggle(+e.target.dataset.t, e.target.checked);
+  };
+  table.onclick = e => { const b = e.target.closest('[data-d]'); if (b) opt.onDel(+b.dataset.d); };
+}
+function runTest(tree, grid, treeBox) {
+  grid.innerHTML = ''; let ok = 0;
+  TEST.forEach((t, i) => {
+    const r = predict(tree, analyze(t.P).feat), good = r.label === t.truth;
+    if (good) ok++;
+    const card = document.createElement('div');
+    card.className = 't-card ' + (good ? 'ok' : 'bad'); card.style.animationDelay = i * 60 + 'ms';
+    card.title = '눌러서 네모봇의 판단 길 보기';
+    card.appendChild(miniBoard(t.P, { color: '#475569' }));
+    card.insertAdjacentHTML('beforeend', `<div class="t-lab"><span>정답 ${t.truth}</span><b style="color:${COLORS[r.label]}">🤖 ${r.label}</b></div><i>${good ? '✓' : '✗'}</i>`);
+    card.onclick = () => { drawTree(treeBox, tree, { path: r.path }); $$('.t-card', grid).forEach(c => c.classList.toggle('sel', c === card)); };
+    grid.appendChild(card);
+  });
+  return { ok, n: TEST.length, acc: ok / TEST.length };
+}
+const resultLine = r => `정확도 <b>${r.ok} / ${r.n}</b> (${Math.round(r.acc * 100)}%)`;
+
+/* 미션 1 */
+const m1 = { pool: [], sel: new Set() };
+function m1New() {
+  const comp = { '정사각형': 3, '직사각형': 3, '마름모': 2, '평행사변형': 1, '사다리꼴': 2, '일반 사각형': 1 };
+  m1.pool = shuffle(Object.entries(comp).flatMap(([t, n]) => Array.from({ length: n }, () => ({ P: genShape(t, { tilt: t === '정사각형' && Math.random() < 0.5 }), label: t }))));
+  m1.sel.clear(); renderM1();
+  drawTree($('#m1Tree'), null, { empty: '카드 6장을 골라 ‘학습 & 시험’을 눌러 보세요.' });
+  $('#m1Test').innerHTML = ''; setMsg('#m1Sum', '');
+}
+function renderM1() {
+  const pool = $('#m1Pool'); pool.innerHTML = '';
+  m1.pool.forEach((c, i) => {
+    const d = document.createElement('div'); d.className = 'pcard' + (m1.sel.has(i) ? ' sel' : ''); d.dataset.i = i;
+    d.appendChild(miniBoard(c.P, { color: COLORS[c.label] }));
+    d.insertAdjacentHTML('beforeend', `<span style="color:${COLORS[c.label]}">${c.label}</span>`);
+    pool.appendChild(d);
+  });
+  $('#m1Count').textContent = `${m1.sel.size} / 6`;
+}
+function m1Go() {
+  if (m1.sel.size !== 6) return toast('카드를 정확히 6장 골라 주세요.');
+  const chosen = [...m1.sel].map(i => m1.pool[i]);
+  const tree = buildTree(chosen.map(c => ({ f: analyze(c.P).feat, label: c.label })));
+  drawTree($('#m1Tree'), tree);
+  const r = runTest(tree, $('#m1Test'), $('#m1Tree'));
+  const kinds = new Set(chosen.map(c => c.label)).size;
+  const st = r.acc === 1 ? 3 : r.acc >= 0.75 ? 2 : 1;
+  setMsg('#m1Sum', `${resultLine(r)} ${starStr(st)}<br>${r.acc === 1 ? '🎉 완벽해요! 여섯 종류를 골고루 골랐군요. <b>데이터의 균형</b>이 중요해요.'
+    : `고른 카드에는 사각형이 <b>${kinds}종류</b>만 있어요. 네모봇은 <b>한 번도 보지 못한 사각형은 맞힐 수 없어요!</b> 다시 골라 보세요.`}`, r.acc === 1 ? 'good' : 'bad');
+  if (award('train-m1', st)) confetti();
+}
+
+/* 미션 2 */
+const m2 = { rows: [], changes: 0 };
+function m2New() {
+  const rows = [], addR = (t, l, o = {}) => rows.push({ P: genShape(t, o), label: l, truth: t, on: true });
+  addR('정사각형', '정사각형', { axis: true }); addR('정사각형', '마름모', { tilt: true }); addR('정사각형', '마름모', { tilt: true });
+  addR('평행사변형', '평행사변형'); addR('평행사변형', '사다리꼴'); addR('평행사변형', '사다리꼴');
+  ['직사각형', '마름모', '사다리꼴', '일반 사각형'].forEach(t => { for (let i = 0; i < 3; i++) addR(t, t); });
+  m2.rows = shuffle(rows); m2.changes = 0;
+  $('#m2Grid').innerHTML = ''; setMsg('#m2Sum', '먼저 ‘시험 보기’로 네모봇의 실력을 확인해 보세요.');
+  renderM2();
+}
+const m2Tree = () => buildTree(rowsFor(m2.rows));
+function renderM2() {
+  $('#m2Changes').textContent = `· 고친 횟수 ${m2.changes}`;
+  drawTree($('#m2Tree'), m2Tree());
+  renderTable($('#m2Table'), m2.rows, {
+    marks: { right: 1, equal: 1, parallel: 1 },
+    onLabel: (i, v) => { m2.rows[i].label = v; m2.changes++; renderM2(); $('#m2Grid').innerHTML = ''; setMsg('#m2Sum', '이름표를 고쳤어요. 네모봇이 다시 학습했어요. ‘시험 보기’로 확인해 보세요!'); }
+  });
+}
+function m2Test() {
+  const tree = m2Tree(); drawTree($('#m2Tree'), tree);
+  const r = runTest(tree, $('#m2Grid'), $('#m2Tree'));
+  const wrong = m2.rows.filter(x => x.label !== x.truth).length;
+  let st = 0, msg;
+  if (r.acc === 1 && !wrong) { st = m2.changes <= 6 ? 3 : 2; msg = `🎉 오염 데이터를 모두 찾아 고쳤어요! (고친 횟수 ${m2.changes}) ${starStr(st)}<br>틀린 이름표가 섞이면 AI도 틀리게 배운다는 것을 기억해요.`; }
+  else if (r.acc === 1) { st = 1; msg = `시험은 100%! 하지만 아직 <b>틀린 이름표가 ${wrong}개</b> 숨어 있어요. 다수결 덕분에 겨우 맞혔을 뿐이에요. 끝까지 찾아보세요! ${starStr(st)}`; }
+  else msg = `네모봇이 ${r.n - r.ok}개를 틀렸어요. 틀린 카드를 누르면 트리에서 판단한 길이 보여요. 그 잎에 모인 데이터의 이름표를 의심해 보세요!`;
+  setMsg('#m2Sum', `${resultLine(r)}<br>${msg}`, r.acc === 1 && !wrong ? 'good' : r.acc === 1 ? '' : 'bad');
+  if (st && award('train-m2', st)) confetti();
+}
+
+function initTrain() {
+  trainL = initBoard($('#trainBoard'));
+  TEST = newTestSet();
+  $('#trainLbls').innerHTML = lblButtons();
+  $('#trainLbls').onclick = e => { const b = e.target.closest('[data-l]'); if (b) labelTrain(b.dataset.l); };
+  $('#trainSkip').onclick = () => { nextTrainShape(); setMsg('#trainMsg', ''); };
+  $('#trainMarks').onchange = () => { autoMarks = false; renderTrainBoard(); };
+  $('#csvBtn').onclick = () => {
+    const rows = trainRows.filter(r => r.on !== false);
+    if (!rows.length) return toast('내보낼 데이터가 없어요.');
+    const lines = ['평행한변쌍수,직각수,네변같음,사각형이름'].concat(rows.map(r => { const f = analyze(r.P).feat; return [f.pp, f.ra, f.eq, r.label].join(','); }));
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '네모봇_학습데이터.csv';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $('#clearBtn').onclick = () => { if (trainRows.length && confirm('학습 데이터를 모두 지울까요?')) { trainRows = []; saveTrain(); renderFree(); $('#testGrid').innerHTML = ''; } };
+  $('#testBtn').onclick = () => {
+    const tree = freeTree();
+    if (!tree) return setMsg('#testSum', '네모봇이 아직 아무것도 배우지 않았어요. 먼저 이름표를 붙여 주세요!', 'bad');
+    drawTree($('#trainTree'), tree);
+    const r = runTest(tree, $('#testGrid'), $('#trainTree'));
+    const n = trainRows.filter(x => x.on !== false).length;
+    const st = n >= 6 ? (r.acc === 1 ? 3 : r.acc >= 0.8 ? 2 : 1) : 0;
+    setBot(r.acc >= 0.8 ? 'happy' : r.acc >= 0.5 ? 'think' : 'sad');
+    setMsg('#testSum', `${resultLine(r)} ${st ? starStr(st) : ''}<br>${r.acc === 1 ? '🎉 만점! 네모봇이 모든 사각형을 맞혔어요.'
+      : '틀린 카드를 누르면 네모봇이 어떤 길로 판단했는지 트리에 표시돼요. 어떤 데이터를 더 가르치면 좋을까요?'}${n < 6 ? '<br>(데이터가 6개 이상이면 ⭐을 받을 수 있어요.)' : ''}`, r.acc === 1 ? 'good' : '');
+    if (st && award('train-free', st)) confetti();
+  };
+  $('#newTestBtn').onclick = () => { TEST = newTestSet(); $('#testGrid').innerHTML = ''; $('#m1Test').innerHTML = ''; $('#m2Grid').innerHTML = ''; toast('새 시험지 12장을 준비했어요.'); };
+  $('#m1Pool').onclick = e => {
+    const c = e.target.closest('[data-i]'); if (!c) return;
+    const i = +c.dataset.i;
+    if (m1.sel.has(i)) m1.sel.delete(i); else if (m1.sel.size < 6) m1.sel.add(i); else return toast('카드는 6장까지만 고를 수 있어요.');
+    renderM1();
+  };
+  $('#m1Go').onclick = m1Go; $('#m1New').onclick = m1New;
+  $('#m2Test').onclick = m2Test; $('#m2Reset').onclick = m2New;
+  setBot('happy'); nextTrainShape(); m1New(); m2New(); renderFree();
+}
+
+/* ---------- 홈 그림 ---------- */
+function heroArt() {
+  const shapes = [
+    ['정사각형', 'M40 60 L110 60 L110 130 L40 130 Z', -8], ['마름모', 'M250 30 L290 85 L250 140 L210 85 Z', 0],
+    ['사다리꼴', 'M40 250 L90 200 L150 200 L190 250 Z', 0], ['평행사변형', 'M210 260 L240 200 L320 200 L290 260 Z', 0],
+    ['직사각형', 'M300 120 L360 120 L360 160 L300 160 Z', 12]
+  ];
+  $('#heroArt').innerHTML = `<svg viewBox="0 0 380 290" aria-hidden="true">${shapes.map(([t, d, r]) => `<path d="${d}" fill="${COLORS[t]}" fill-opacity=".85" transform="rotate(${r} 190 145)"/>`).join('')}
+    <g transform="translate(130 85) scale(1.4)">${robot('happy', 90).replace('<svg class="robot" viewBox="0 0 90 90" width="90" height="90" aria-hidden="true">', '').replace('</svg>', '')}</g>
+    <path d="M170 225 q20 -14 40 0" stroke="#1c2541" stroke-width="0" fill="none"/></svg>`;
+}
+
+/* ---------- 시작 ---------- */
+function init() {
+  heroArt();
+  makeLineLesson('perp'); makeLineLesson('par');
+  initLab(); initTheory(); initDetective(); initTrain();
+  setupSubnav('exploreNav');
+  setupSubnav('trainNav', s => { if (s === 'free') renderFree(); });
+  $('#modalClose').onclick = closeModal;
+  $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if ($('#page-detective').classList.contains('active') && det.on) { if (e.key === 'y' || e.key === 'ArrowLeft') detAnswer(true); if (e.key === 'n' || e.key === 'ArrowRight') detAnswer(false); }
+  });
+  $('#resetAll').onclick = () => {
+    if (!confirm('모은 별과 훈련소 학습 데이터를 모두 지울까요?')) return;
+    progress = {}; trainRows = []; store.set('progress', progress); saveTrain();
+    refreshStars(); renderFree(); renderMissions($('#perpMissions'), PERP_M); renderMissions($('#parMissions'), PAR_M); renderMissions($('#labMissions'), LAB_M, lab.sel);
+    detIntro(); toast('초기화했어요.');
+  };
+  refreshStars();
+  go(location.hash.slice(1) || 'home');
+}
+init();
+
+</script>
+</body>
+</html>
